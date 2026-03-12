@@ -74,6 +74,7 @@ body{background:#FFF8F0;font-family:'DM Sans',sans-serif;letter-spacing:0.01em;m
 #flash{position:fixed;inset:0;pointer-events:none;z-index:999;opacity:0;}
 #countdown-overlay{position:fixed;inset:0;background:rgba(255,248,240,.95);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
 .countdown-num{font-family:'Bebas Neue',sans-serif;font-size:140px;font-weight:400;line-height:1;letter-spacing:.08em;}
+.countdown-team{border-radius:24px;padding:8px 28px;font-size:14px;font-weight:600;color:#fff;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
 .countdown-label{font-size:16px;font-weight:700;color:#9B8EA5;letter-spacing:.1em;text-transform:uppercase;}
 #settings-overlay{position:fixed;inset:0;background:rgba(61,44,64,.45);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;}
 .settings-box{background:#fff;border-radius:24px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 16px 48px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:20px;animation:fadeUp .3s both;}
@@ -789,6 +790,40 @@ function toggleMusic() {
   if (btn) btn.textContent = musicPlaying ? '🎵 Música: ON' : '🎵 Música: OFF';
 }
 
+function sfxEndTurn() {
+  try {
+    var ac = getAudioCtx(); if (ac.state==='suspended') ac.resume();
+    var t = ac.currentTime;
+    // Three descending tones — "tiempo terminado"
+    [[523, 0], [415, 0.18], [330, 0.36]].forEach(function(p) {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = p[0];
+      o.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0, t + p[1]);
+      g.gain.linearRampToValueAtTime(0.35, t + p[1] + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.001, t + p[1] + 0.28);
+      o.start(t + p[1]); o.stop(t + p[1] + 0.3);
+    });
+  } catch(e) {}
+}
+
+function sfxCountdownBeep(secondsLeft) {
+  try {
+    var ac = getAudioCtx(); if (ac.state==='suspended') ac.resume();
+    var t = ac.currentTime;
+    // Pitch rises as time runs out: 10s=600hz, 1s=1100hz
+    var freq = 600 + (10 - secondsLeft) * 50;
+    var vol = secondsLeft <= 3 ? 0.22 : 0.13;
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    o.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    o.start(t); o.stop(t + 0.14);
+  } catch(e) {}
+}
+
 function sfxCorrect() {
   var ac = getAudioCtx(); if (ac.state==='suspended') ac.resume();
   var t = ac.currentTime;
@@ -888,7 +923,8 @@ function startTimer() {
       state.bombActive = true;
       renderActions();
     }
-    if (state.timeLeft <= 0) { stopTimer(); state.screen = 'review'; renderCurrent(); }
+    if (state.timeLeft <= 0) { stopTimer(); sfxEndTurn(); state.screen = 'review'; renderCurrent(); }
+    else if (state.timeLeft <= 10) { sfxCountdownBeep(state.timeLeft); }
   }, 1000);
 }
 
@@ -928,6 +964,7 @@ function showCountdown(n, cb) {
 
   function tick(num) {
     overlay.innerHTML =
+      '<div class="countdown-team" style="background:' + tc.grad + '">' + TEAM_NAMES[state.currentTeam] + '</div>' +
       '<div class="countdown-num" id="cdn" style="color:' + tc.dark + '">' + num + '</div>' +
       '<div class="countdown-label">¡Preparate!</div>';
     document.body.appendChild(overlay);
@@ -1039,12 +1076,15 @@ function handleResult(result) {
   else { sfxSkip(); flash('#FFE9A0'); }
   state.turnHistory.push({ word: state.card.palabra, result: result });
   state.card = getRandomCard();
+  // Bomb disappears after one word — mark used so it never re-triggers
+  if (state.bombActive) { state.bombActive = false; state.bombUsed = true; }
   renderCard();
+  renderActions();
   renderMiniHistory();
   updateMiniScore();
 }
 
-function endTurn() { stopTimer(); state.screen = 'review'; renderCurrent(); }
+function endTurn() { stopTimer(); sfxEndTurn(); state.screen = 'review'; renderCurrent(); }
 
 function nextTurn() {
   var nextTeam = (state.currentTeam + 1) % 2;
