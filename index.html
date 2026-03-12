@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Tabú Argentum 🎶</title>
+<title>Tabú 🎶</title>
 <link rel="manifest" href="manifest.json"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<meta name="apple-mobile-web-app-title" content="Tabú Argentum"/>
+<meta name="apple-mobile-web-app-title" content="TABÚ JUEGAZO"/>
 <meta name="theme-color" content="#E8709A"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
@@ -897,10 +897,15 @@ function scheduleCumbiaLoop(startTime) {
 
 function startMusic() {
   if (musicPlayingRef) return;
+  // Destroy any existing context to prevent double-music bug
+  if (audioCtx) {
+    try { audioCtx.close(); } catch(e) {}
+    audioCtx = null;
+    masterGain = null;
+  }
   musicPlayingRef = true;
-  getAudioCtx();
+  getAudioCtx(); // creates a fresh context
   reverbNode = null;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
   var next = audioCtx.currentTime + 0.1;
   function tick() {
     if (!musicPlayingRef) return;
@@ -915,8 +920,13 @@ function startMusic() {
 function stopMusic() {
   musicPlayingRef = false;
   clearTimeout(musicLoopTimer);
+  musicLoopTimer = null;
   reverbNode = null;
-  if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+  if (audioCtx) {
+    try { audioCtx.close(); } catch(e) {}
+    audioCtx = null;
+    masterGain = null;
+  }
   musicPlaying = false;
 }
 
@@ -1008,8 +1018,8 @@ var TEAM_NAMES = ['Equipo Rojo', 'Equipo Azul'];
 
 // PLAYERS[teamIdx] = array of name strings
 var PLAYERS = [
-  ['Jugador 1', 'Jugador 2', 'Jugador 3'],
-  ['Jugador 1', 'Jugador 2', 'Jugador 3']
+  ['Jugador 1', 'Jugador 2'],
+  ['Jugador 1', 'Jugador 2']
 ];
 var speakerIdx = [0, 0]; // next speaker index per team
 var TC = [
@@ -2193,7 +2203,7 @@ function renderActions() {
       '<button class="btn btn-correct" onclick="handleResult(\'correct\')" style="flex:none;width:90px">✓<br/>Correcto</button>';
   } else {
     area.innerHTML =
-      '<button class="btn btn-tabu" onclick="handleResult(\'tabu\')">🚫<br/>Tabú</button>' +
+      '<button class="btn btn-tabu" onclick="handleResult(\'tabu\')">🚫<br/>TABÚ JUEGAZO</button>' +
       '<button class="btn btn-skip" onclick="handleResult(\'skip\')">⏭<br/>Pasar</button>' +
       '<button class="btn btn-correct" onclick="handleResult(\'correct\')">✓<br/>Correcto</button>';
   }
@@ -2587,7 +2597,7 @@ function renderHome() {
   var startLabel = isFirst ? '✨ ¡Comenzar juego!' : '🎯 ¡Empezar turno!';
 
   s.innerHTML =
-    '<div class="logo">Tabú Argentum</div>' +
+    '<div class="logo">TABÚ JUEGAZO</div>' +
     '<div class="' + (isFirst?'subtitle':'round-badge') + '">' + (isFirst ? 'el juego de las palabras prohibidas' : 'Ronda ' + state.round + ' de ' + settings.maxRounds) + '</div>' +
     '<div class="scoreboard">' + scoreCards + '</div>' +
     (!isFirst ? '<div class="turn-announce">Turno de <strong style="color:' + tc.dark + '">' + TEAM_NAMES[state.currentTeam] + '</strong>' +
@@ -2708,7 +2718,7 @@ function renderCurrent() {
 applyTheme(settings.theme);
 
 </script>
-<div class="version-tag">v1.2 - by Nicof</div>
+<div class="version-tag">v1.4 - by Nicof</div>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
