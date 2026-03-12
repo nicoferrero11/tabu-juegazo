@@ -4,6 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Tabú Argentum 🎶</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Tabú Argentum"/>
+<meta name="theme-color" content="#E8709A"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
@@ -71,6 +79,35 @@ body{background:#FFF8F0;font-family:'DM Sans',sans-serif;letter-spacing:0.01em;m
 .stat-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
 .history-list{width:100%;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
 .history-row{display:flex;align-items:center;gap:8px;border-left:4px solid;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700;color:#3D2C40;}
+.players-btn{background:none;border:1.5px solid;border-radius:10px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:4px;letter-spacing:.04em;}
+.speaker-announce{font-size:13px;font-weight:400;color:#9B8EA5;margin-top:3px;}
+.countdown-speaker{font-size:16px;color:#3D2C40;font-weight:500;margin-top:-4px;}
+.countdown-speaker strong{font-weight:800;}
+#players-overlay{position:fixed;inset:0;background:rgba(61,44,64,.45);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;}
+.players-box{background:#fff;border-radius:24px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 16px 48px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s both;max-height:90vh;overflow-y:auto;}
+.players-title{font-size:20px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;}
+.players-subtitle{font-size:11px;color:#9B8EA5;font-weight:600;letter-spacing:.1em;text-transform:uppercase;text-align:center;margin-top:-6px;}
+.player-row{display:flex;align-items:center;gap:8px;}
+.player-input{flex:1;border:2px solid #E8E0F0;border-radius:10px;padding:10px 12px;font-size:15px;font-family:'Inter',sans-serif;font-weight:600;color:#3D2C40;outline:none;}
+.player-input:focus{border-color:#A78BFA;}
+.player-del{background:none;border:none;font-size:18px;color:#E8709A;cursor:pointer;padding:4px 8px;line-height:1;border-radius:8px;}
+.player-del:active{background:#FFE0E8;}
+.player-add-btn{background:none;border:2px dashed #C8B8F0;border-radius:12px;padding:10px;font-size:14px;font-weight:700;color:#A78BFA;cursor:pointer;font-family:'Inter',sans-serif;width:100%;}
+.player-add-btn:active{background:#F3F0FF;}
+.player-limit{text-align:center;font-size:12px;color:#C8B8F0;font-weight:600;}
+.edit-hint{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+#name-editor{position:fixed;inset:0;background:rgba(61,44,64,.45);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;}
+.name-editor-box{background:#fff;border-radius:24px;padding:28px 24px;width:100%;max-width:320px;box-shadow:0 16px 48px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:16px;animation:fadeUp .3s both;}
+.name-editor-title{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;}
+.name-input{border:2px solid #E8E0F0;border-radius:12px;padding:12px 16px;font-size:18px;font-family:'Inter',sans-serif;font-weight:600;text-align:center;outline:none;width:100%;color:#3D2C40;}
+.name-input:focus{border-color:#A78BFA;}
+.name-editor-btns{display:flex;gap:10px;align-items:center;}
+#player-count-error{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:800;pointer-events:none;}
+#player-count-error .error-inner{background:#3D2C40;color:#fff;border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:fadeUp .3s both;max-width:300px;width:85%;}
+.error-icon{font-size:22px;flex-shrink:0;}
+.error-text{font-size:13px;line-height:1.5;}
+.error-text strong{color:#F9A8C9;}
+.version-tag{position:fixed;bottom:14px;left:16px;font-size:11px;color:#C8B8F0;font-weight:600;letter-spacing:.08em;z-index:10;pointer-events:none;}
 #flash{position:fixed;inset:0;pointer-events:none;z-index:999;opacity:0;}
 #countdown-overlay{position:fixed;inset:0;background:rgba(255,248,240,.95);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
 .countdown-num{font-family:'Bebas Neue',sans-serif;font-size:140px;font-weight:400;line-height:1;letter-spacing:.08em;}
@@ -964,6 +1001,13 @@ function sfxSkip() {
 //  GAME STATE
 // ═══════════════════════════════════════
 var TEAM_NAMES = ['Equipo Rojo', 'Equipo Azul'];
+
+// PLAYERS[teamIdx] = array of name strings
+var PLAYERS = [
+  ['Jugador 1', 'Jugador 2', 'Jugador 3'],
+  ['Jugador 1', 'Jugador 2', 'Jugador 3']
+];
+var speakerIdx = [0, 0]; // next speaker index per team
 var TC = [
   { light:'#F9A8C9', dark:'#E8709A', grad:'linear-gradient(135deg,#F9A8C9,#E8709A)' },
   { light:'#A8D4F9', dark:'#3A8EDE', grad:'linear-gradient(135deg,#A8D4F9,#3A8EDE)' },
@@ -1082,7 +1126,8 @@ var state = {
   timeLeft: settings.turnDuration,
   timerInterval: null,
   turnHistory: [],
-  usedIndices: {}
+  usedIndices: {},
+  currentSpeaker: [0, 0]  // tracks who spoke, per team
 };
 
 function getRandomCard() {
@@ -1150,6 +1195,12 @@ function scheduleBomb() {
 }
 
 function startTurn() {
+  // Validate equal player counts before first turn
+  var isFirst = state.round === 1 && state.currentTeam === 0;
+  if (isFirst && PLAYERS[0].length !== PLAYERS[1].length) {
+    showPlayerCountError();
+    return;
+  }
   stopTimer();
   state.turnHistory = [];
   state.timeLeft = settings.turnDuration;
@@ -1162,6 +1213,22 @@ function startTurn() {
   });
 }
 
+function showPlayerCountError() {
+  var existing = document.getElementById('player-count-error');
+  if (existing) { existing.remove(); return; }
+  var toast = document.createElement('div');
+  toast.id = 'player-count-error';
+  toast.innerHTML =
+    '<div class="error-inner">' +
+      '<div class="error-icon">⚠️</div>' +
+      '<div class="error-text">Ambos equipos deben tener la misma cantidad de jugadores<br>' +
+      '<strong>' + TEAM_NAMES[0] + ': ' + PLAYERS[0].length + '</strong> · ' +
+      '<strong>' + TEAM_NAMES[1] + ': ' + PLAYERS[1].length + '</strong></div>' +
+    '</div>';
+  document.body.appendChild(toast);
+  setTimeout(function() { if (toast.parentNode) toast.remove(); }, 3500);
+}
+
 function showCountdown(n, cb) {
   var existing = document.getElementById('countdown-overlay');
   if (existing) existing.remove();
@@ -1172,6 +1239,7 @@ function showCountdown(n, cb) {
   function tick(num) {
     overlay.innerHTML =
       '<div class="countdown-team" style="background:' + tc.grad + '">' + TEAM_NAMES[state.currentTeam] + '</div>' +
+      '<div class="countdown-speaker">Le toca a <strong>' + PLAYERS[state.currentTeam][state.currentSpeaker[state.currentTeam]] + '</strong></div>' +
       '<div class="countdown-num" id="cdn" style="color:' + tc.dark + '">' + num + '</div>' +
       '<div class="countdown-label">¡Preparate!</div>';
     document.body.appendChild(overlay);
@@ -1298,6 +1366,9 @@ function nextTurn() {
   var nextTeam = (state.currentTeam + 1) % 2;
   var nextRound = nextTeam === 0 ? state.round + 1 : state.round;
   if (nextRound > settings.maxRounds) { state.screen = 'gameover'; renderCurrent(); return; }
+  // Advance speaker for the team that just played
+  var prevTeam = state.currentTeam;
+  state.currentSpeaker[prevTeam] = (state.currentSpeaker[prevTeam] + 1) % PLAYERS[prevTeam].length;
   state.currentTeam = nextTeam;
   state.round = nextRound;
   state.screen = 'home';
@@ -1310,7 +1381,8 @@ function nextTurn() {
 function resetGame() {
   stopTimer();
   state = { screen:'home', scores:[0,0], currentTeam:0, round:1, maxRounds:settings.maxRounds,
-    card:null, timeLeft:settings.turnDuration, timerInterval:null, turnHistory:[], usedIndices:{} };
+    card:null, timeLeft:settings.turnDuration, timerInterval:null, turnHistory:[], usedIndices:{},
+    currentSpeaker:[0,0] };
   renderCurrent();
 }
 
@@ -1435,6 +1507,107 @@ function updateMiniScore() {
 // ═══════════════════════════════════════
 //  SCREENS
 // ═══════════════════════════════════════
+function closeNameEditor() { var el = document.getElementById('name-editor'); if (el) el.remove(); }
+function closePlayers() { var el = document.getElementById('players-overlay'); if (el) el.remove(); renderHome(); }
+
+// ── Players editor ──
+function openPlayers(teamIdx) {
+  var existing = document.getElementById('players-overlay');
+  if (existing) { existing.remove(); return; }
+  var ov = document.createElement('div');
+  ov.id = 'players-overlay';
+  ov.onclick = function(e) { if (e.target === ov) ov.remove(); };
+  document.body.appendChild(ov);
+  renderPlayersContent(teamIdx);
+}
+
+function renderPlayersContent(teamIdx) {
+  var ov = document.getElementById('players-overlay');
+  if (!ov) return;
+  var tc = TC[teamIdx];
+  var players = PLAYERS[teamIdx];
+  var canAdd = players.length < 5;
+
+  var rows = players.map(function(name, idx) {
+    return '<div class="player-row">' +
+      '<input class="player-input" maxlength="14" value="' + name + '" ' +
+        'onchange="updatePlayerName(' + teamIdx + ',' + idx + ',this.value)" ' +
+        'oninput="updatePlayerName(' + teamIdx + ',' + idx + ',this.value)"/>' +
+      (players.length > 1
+        ? '<button class="player-del" onclick="removePlayer(' + teamIdx + ',' + idx + ')">✕</button>'
+        : '<button class="player-del" disabled style="opacity:.3">✕</button>') +
+    '</div>';
+  }).join('');
+
+  var addBtn = canAdd
+    ? '<button class="player-add-btn" onclick="addPlayer(' + teamIdx + ')">+ Agregar jugador</button>'
+    : '<div class="player-limit">Máximo 5 jugadores</div>';
+
+  ov.innerHTML =
+    '<div class="players-box">' +
+      '<div class="players-title" style="color:' + tc.dark + '">' + TEAM_NAMES[teamIdx] + '</div>' +
+      '<div class="players-subtitle">Jugadores (' + players.length + '/5)</div>' +
+      '<div id="player-rows">' + rows + '</div>' +
+      addBtn +
+      '<button class="btn btn-primary" style="background:' + tc.grad + ';padding:11px 0;font-size:15px;margin-top:4px" ' +
+        'onclick="closePlayers()">Listo ✓</button>' +
+    '</div>';
+}
+
+function updatePlayerName(teamIdx, idx, val) {
+  var trimmed = val.trim();
+  if (trimmed.length > 0) PLAYERS[teamIdx][idx] = trimmed;
+}
+
+function addPlayer(teamIdx) {
+  if (PLAYERS[teamIdx].length >= 5) return;
+  var n = PLAYERS[teamIdx].length + 1;
+  PLAYERS[teamIdx].push('Jugador ' + n);
+  renderPlayersContent(teamIdx);
+}
+
+function removePlayer(teamIdx, idx) {
+  if (PLAYERS[teamIdx].length <= 1) return;
+  PLAYERS[teamIdx].splice(idx, 1);
+  // Fix speaker index if out of bounds
+  if (state.currentSpeaker[teamIdx] >= PLAYERS[teamIdx].length) {
+    state.currentSpeaker[teamIdx] = 0;
+  }
+  renderPlayersContent(teamIdx);
+}
+
+function editTeamName(i) {
+  var current = TEAM_NAMES[i];
+  var tc = TC[i];
+  // Create inline modal with input
+  var existing = document.getElementById('name-editor');
+  if (existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'name-editor';
+  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+  modal.innerHTML =
+    '<div class="name-editor-box">' +
+      '<div class="name-editor-title" style="color:' + tc.dark + '">Nombre del equipo</div>' +
+      '<input id="name-input-' + i + '" class="name-input" maxlength="20" value="' + current + '" />' +
+      '<div class="name-editor-btns">' +
+        '<button class="btn-ghost" onclick="closeNameEditor()">Cancelar</button>' +
+        '<button class="btn btn-primary" style="background:' + tc.grad + ';padding:10px 24px;font-size:15px" onclick="saveTeamName(' + i + ')">Guardar</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(modal);
+  var inp = document.getElementById('name-input-' + i);
+  if (inp) { inp.focus(); inp.select(); }
+}
+
+function saveTeamName(i) {
+  var inp = document.getElementById('name-input-' + i);
+  if (!inp) return;
+  var val = inp.value.trim();
+  if (val.length > 0) TEAM_NAMES[i] = val;
+  closeNameEditor();
+  renderHome();
+}
+
 function renderHome() {
   var isFirst = state.round===1 && state.currentTeam===0;
   var tc = TC[state.currentTeam];
@@ -1455,6 +1628,17 @@ function renderHome() {
     var sh = active ? '0 8px 22px ' + TC[i].light + '99' : '0 2px 10px rgba(0,0,0,.06)';
     var nc = active ? '#fff' : TC[i].dark;
     var vc = active ? '#fff' : '#3D2C40';
+    var hintColor = active ? 'rgba(255,255,255,.55)' : TC[i].light;
+    var editHint = isFirst ? '<div class="edit-hint" style="color:' + hintColor + '">✏️ editar</div>' : '';
+    if (isFirst) {
+      return '<div class="score-card" style="background:' + bg + ';border-color:' + bc + ';transform:' + sc + ';box-shadow:' + sh + '">' +
+        '<div class="score-name" style="color:' + nc + ';cursor:pointer" onclick="editTeamName(' + i + ')">' + name + ' ✏️</div>' +
+        '<div class="score-num" style="color:' + vc + '">' + state.scores[i] + '</div>' +
+        '<button class="players-btn" style="color:' + TC[i].dark + ';border-color:' + TC[i].light + '" onclick="openPlayers(' + i + ')">' +
+          '👥 ' + PLAYERS[i].length + ' jugadores' +
+        '</button>' +
+        '</div>';
+    }
     return '<div class="score-card" style="background:' + bg + ';border-color:' + bc + ';transform:' + sc + ';box-shadow:' + sh + '">' +
       '<div class="score-name" style="color:' + nc + '">' + name + '</div>' +
       '<div class="score-num" style="color:' + vc + '">' + state.scores[i] + '</div>' +
@@ -1469,7 +1653,9 @@ function renderHome() {
     '<div class="logo">Tabú Argentum</div>' +
     '<div class="' + (isFirst?'subtitle':'round-badge') + '">' + (isFirst ? 'el juego de las palabras prohibidas' : 'Ronda ' + state.round + ' de ' + settings.maxRounds) + '</div>' +
     '<div class="scoreboard">' + scoreCards + '</div>' +
-    (!isFirst ? '<div class="turn-announce">Turno de <strong style="color:' + tc.dark + '">' + TEAM_NAMES[state.currentTeam] + '</strong></div>' : '') +
+    (!isFirst ? '<div class="turn-announce">Turno de <strong style="color:' + tc.dark + '">' + TEAM_NAMES[state.currentTeam] + '</strong>' +
+      '<div class="speaker-announce">Da las pistas: <strong>' + PLAYERS[state.currentTeam][state.currentSpeaker[state.currentTeam]] + '</strong></div>' +
+    '</div>' : '') +
     '<button class="btn btn-primary" style="background:' + startBg + ';box-shadow:0 6px 18px ' + startSh + '" onclick="startTurn()">' + startLabel + '</button>' +
     (!isFirst ? '<button class="btn-ghost" onclick="resetGame()">Reiniciar juego</button>' : '') +
     musicBtnHTML(false) +
@@ -1582,6 +1768,14 @@ function renderCurrent() {
 
 renderCurrent();
 
+</script>
+<div class="version-tag">v2.0 - by Nicof</div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
