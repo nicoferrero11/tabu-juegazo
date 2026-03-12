@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fondos - Tabú Argentum</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #1a1a2e; color: #fff; padding: 20px; }
+h1 { text-align: center; font-family: 'Bebas Neue'; font-size: 32px; letter-spacing: .1em; color: #F9A8C9; margin-bottom: 6px; }
+p { text-align: center; font-size: 13px; color: #9B8EA5; margin-bottom: 24px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; max-width: 900px; margin: 0 auto; }
+.option { border-radius: 20px; overflow: hidden; cursor: pointer; border: 3px solid transparent; transition: all .2s; }
+.option:hover { transform: scale(1.03); border-color: #F9A8C9; }
+.option.active { border-color: #F9A8C9; box-shadow: 0 0 0 2px #F9A8C9; }
+.preview { height: 220px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; pointer-events: none; }
+.mini-card { background: white; border-radius: 12px; padding: 10px 14px; font-size: 12px; font-weight: 800; z-index: 1; box-shadow: 0 4px 12px rgba(0,0,0,.15); width: 110px; text-align: center; }
+.mini-score { border-radius: 12px; padding: 8px 12px; font-size: 11px; font-weight: 700; z-index: 1; width: 110px; text-align: center; }
+.label { color: white; font-size: 12px; font-weight: 700; text-align: center; padding: 10px; letter-spacing: .05em; text-transform: uppercase; }
+.tag { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.3); border-radius: 8px; padding: 3px 8px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.8); z-index: 2; }
+.current-tag { background: #E8709A; color: white; }
+
+/* ─── FONDOS ─── */
+/* 1. Actual */
+.bg1 { background: #FFF8F0; }
+.bg1 .blob1 { width:200px;height:200px;background:radial-gradient(circle,rgba(249,168,201,.35),transparent 70%);top:-60px;right:-40px; }
+.bg1 .blob2 { width:160px;height:160px;background:radial-gradient(circle,rgba(168,212,249,.3),transparent 70%);bottom:-40px;left:-30px; }
+.bg1 .mini-card { border: 2px solid rgba(249,168,201,.4); color: #3D2C40; }
+.bg1 .mini-card span { color: #E8709A; font-size: 10px; font-weight: 600; display: block; }
+.bg1 .mini-score { background: linear-gradient(135deg,#F9A8C9,#E8709A); color: white; }
+.bg1 .label { color: #3D2C40; }
+
+/* 2. Noche oscura */
+.bg2 { background: #0F0A1E; }
+.bg2 .blob1 { width:200px;height:200px;background:radial-gradient(circle,rgba(167,139,250,.25),transparent 70%);top:-40px;right:-40px; }
+.bg2 .blob2 { width:180px;height:180px;background:radial-gradient(circle,rgba(236,72,153,.2),transparent 70%);bottom:-50px;left:-20px; }
+.bg2 .mini-card { border: 2px solid rgba(167,139,250,.4); color: #1a0f3a; }
+.bg2 .mini-card span { color: #A78BFA; font-size: 10px; font-weight: 600; display: block; }
+.bg2 .mini-score { background: linear-gradient(135deg,#7C3AED,#A78BFA); color: white; }
+.bg2 .label { color: #E2D9F3; }
+
+/* 3. Verde esmeralda */
+.bg3 { background: #0A1F1A; }
+.bg3 .blob1 { width:200px;height:200px;background:radial-gradient(circle,rgba(52,211,153,.2),transparent 70%);top:-50px;right:-30px; }
+.bg3 .blob2 { width:170px;height:170px;background:radial-gradient(circle,rgba(16,185,129,.15),transparent 70%);bottom:-40px;left:-30px; }
+.bg3 .mini-card { border: 2px solid rgba(52,211,153,.4); color: #0A1F1A; }
+.bg3 .mini-card span { color: #10B981; font-size: 10px; font-weight: 600; display: block; }
+.bg3 .mini-score { background: linear-gradient(135deg,#059669,#34D399); color: white; }
+.bg3 .label { color: #A7F3D0; }
+
+/* 4. Azul océano */
+.bg4 { background: #0A1628; }
+.bg4 .blob1 { width:210px;height:210px;background:radial-gradient(circle,rgba(56,189,248,.2),transparent 70%);top:-50px;right:-40px; }
+.bg4 .blob2 { width:170px;height:170px;background:radial-gradient(circle,rgba(14,165,233,.15),transparent 70%);bottom:-40px;left:-20px; }
+.bg4 .mini-card { border: 2px solid rgba(56,189,248,.4); color: #0A1628; }
+.bg4 .mini-card span { color: #0EA5E9; font-size: 10px; font-weight: 600; display: block; }
+.bg4 .mini-score { background: linear-gradient(135deg,#0369A1,#38BDF8); color: white; }
+.bg4 .label { color: #BAE6FD; }
+
+/* 5. Sunset naranja */
+.bg5 { background: #1C0A00; }
+.bg5 .blob1 { width:220px;height:220px;background:radial-gradient(circle,rgba(251,146,60,.25),transparent 70%);top:-60px;right:-30px; }
+.bg5 .blob2 { width:180px;height:180px;background:radial-gradient(circle,rgba(239,68,68,.2),transparent 70%);bottom:-50px;left:-20px; }
+.bg5 .mini-card { border: 2px solid rgba(251,146,60,.4); color: #1C0A00; }
+.bg5 .mini-card span { color: #F97316; font-size: 10px; font-weight: 600; display: block; }
+.bg5 .mini-score { background: linear-gradient(135deg,#DC2626,#FB923C); color: white; }
+.bg5 .label { color: #FED7AA; }
+
+/* 6. Celeste Argentina */
+.bg6 { background: #EAF4FF; }
+.bg6 .blob1 { width:200px;height:200px;background:radial-gradient(circle,rgba(96,165,250,.3),transparent 70%);top:-50px;right:-30px; }
+.bg6 .blob2 { width:170px;height:170px;background:radial-gradient(circle,rgba(147,197,253,.25),transparent 70%);bottom:-40px;left:-20px; }
+.bg6 .mini-card { border: 2px solid rgba(96,165,250,.4); color: #1e3a5f; }
+.bg6 .mini-card span { color: #3B82F6; font-size: 10px; font-weight: 600; display: block; }
+.bg6 .mini-score { background: linear-gradient(135deg,#1D4ED8,#60A5FA); color: white; }
+.bg6 .label { color: #1e3a5f; }
+
+/* 7. Gradiente aurora */
+.bg7 { background: linear-gradient(135deg, #0F0C29, #302B63, #24243e); }
+.bg7 .blob1 { width:220px;height:220px;background:radial-gradient(circle,rgba(129,236,236,.2),transparent 70%);top:-50px;right:-30px; }
+.bg7 .blob2 { width:180px;height:180px;background:radial-gradient(circle,rgba(255,99,132,.15),transparent 70%);bottom:-40px;left:-20px; }
+.bg7 .mini-card { border: 2px solid rgba(129,236,236,.4); color: #0F0C29; }
+.bg7 .mini-card span { color: #81ECEC; font-size: 10px; font-weight: 600; display: block; }
+.bg7 .mini-score { background: linear-gradient(135deg,#6C5CE7,#81ECEC); color: white; }
+.bg7 .label { color: #DFE6E9; }
+
+/* 8. Tierra cálida */
+.bg8 { background: #F5ECD7; }
+.bg8 .blob1 { width:200px;height:200px;background:radial-gradient(circle,rgba(180,120,60,.2),transparent 70%);top:-50px;right:-30px; }
+.bg8 .blob2 { width:170px;height:170px;background:radial-gradient(circle,rgba(139,90,43,.15),transparent 70%);bottom:-40px;left:-20px; }
+.bg8 .mini-card { border: 2px solid rgba(180,120,60,.35); color: #3D1F00; }
+.bg8 .mini-card span { color: #B47C3C; font-size: 10px; font-weight: 600; display: block; }
+.bg8 .mini-score { background: linear-gradient(135deg,#92400E,#D97706); color: white; }
+.bg8 .label { color: #3D1F00; }
+</style>
+</head>
+<body>
+<h1>Tabú Argentum — Opciones de Fondo</h1>
+<p>Mirá cómo queda cada fondo con las tarjetas del juego</p>
+<div class="grid">
+
+  <div class="option">
+    <div class="preview bg1">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="tag current-tag">ACTUAL</div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo Rojo · 3</div>
+    </div>
+    <div class="label" style="background:#FFF8F0;color:#3D2C40">① Rosa crema</div>
+  </div>
+
+  <div class="option">
+    <div class="preview bg2">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo Rojo · 3</div>
+    </div>
+    <div class="label" style="background:#1a0f3a">② Noche violeta</div>
+  </div>
+
+  <div class="option">
+    <div class="preview bg3">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo Verde · 3</div>
+    </div>
+    <div class="label" style="background:#0d2b22">③ Verde esmeralda</div>
+  </div>
+
+  <div class="option">
+    <div class="preview bg4">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo Azul · 3</div>
+    </div>
+    <div class="label" style="background:#0c1f36">④ Azul océano</div>
+  </div>
+
+  <div class="option">
+    <div class="preview bg5">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo Rojo · 3</div>
+    </div>
+    <div class="label" style="background:#2c1200">⑤ Sunset naranja</div>
+  </div>
+
+  <div class="option">
+    <div class="preview bg6">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo Azul · 3</div>
+    </div>
+    <div class="label" style="background:#d0e8ff;color:#1e3a5f">⑥ Celeste Argentina</div>
+  </div>
+
+  <div class="option">
+    <div class="preview bg7">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo · 3</div>
+    </div>
+    <div class="label" style="background:#24243e">⑦ Aurora boreal</div>
+  </div>
+
+  <div class="option">
+    <div class="preview bg8">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="mini-card">ASADO<span>tabú: parrilla, carne...</span></div>
+      <div class="mini-score">Equipo · 3</div>
+    </div>
+    <div class="label" style="background:#e8d5b0;color:#3D1F00">⑧ Tierra cálida</div>
+  </div>
+
+</div>
+<p style="margin-top:24px">Decime el número y lo aplico 🎨</p>
+</body>
+</html>
