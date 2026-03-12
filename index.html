@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>TABÚ 🎶</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:#FFF8F0;font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+#app{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+
+/* Blobs */
+.blob{position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
+
+/* Screens */
+.screen{position:relative;z-index:1;width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;animation:fadeUp .35s both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{0%{transform:scale(.88)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes flashAnim{0%{opacity:.7}100%{opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Typography */
+.logo{font-family:'Fredoka One',cursive;font-size:64px;color:#E8709A;letter-spacing:.05em;line-height:1;text-shadow:3px 3px 0 #F9A8C9;}
+.subtitle{font-size:13px;color:#9B8EA5;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:-8px;}
+.round-badge{background:rgba(249,168,201,.15);border:1px solid rgba(249,168,201,.4);border-radius:20px;padding:4px 16px;color:#E8709A;font-size:12px;font-weight:700;margin-top:-8px;}
+
+/* Score board */
+.scoreboard{display:flex;gap:12px;width:100%;}
+.score-card{flex:1;border-radius:20px;padding:16px 10px;text-align:center;transition:transform .3s,box-shadow .3s;border:2px solid;}
+.score-name{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.score-num{font-family:'Fredoka One',cursive;font-size:48px;line-height:1;}
+
+/* Buttons */
+.btn{border:none;border-radius:16px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;}
+.btn:active{transform:scale(.93)!important;}
+.btn-primary{width:100%;padding:15px 0;font-size:17px;color:#fff;margin-top:6px;}
+.btn-ghost{width:100%;padding:10px;background:none;border:1.5px solid rgba(155,142,165,.3);border-radius:12px;color:#9B8EA5;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;}
+.btn-ghost:active{transform:scale(.96);}
+.btn-music{background:none;border:1.5px solid #C8B8F0;border-radius:20px;padding:7px 18px;color:#A78BFA;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;}
+.btn-music.on{background:linear-gradient(135deg,#C8B8F0,#A78BFA);color:#fff;border-color:#A78BFA;}
+
+/* Turn announce */
+.turn-announce{font-size:17px;color:#3D2C40;font-weight:700;text-align:center;}
+
+/* Timer */
+.timer-row{display:flex;align-items:center;gap:10px;width:100%;}
+.timer-circle{width:62px;height:62px;border-radius:50%;border:3px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .5s,color .5s,background .5s;}
+.timer-num{font-family:'Fredoka One',cursive;font-size:24px;}
+.team-badge{border-radius:20px;padding:5px 16px;font-size:12px;font-weight:800;color:#fff;letter-spacing:.05em;display:inline-block;}
+.mini-score{display:flex;flex-direction:column;gap:3px;align-items:flex-end;}
+.mini-score span{border-radius:8px;padding:3px 10px;font-size:13px;font-weight:800;}
+
+/* Card */
+.card{width:100%;background:#fff;border-radius:24px;padding:26px 22px;box-shadow:0 8px 32px rgba(0,0,0,.07);border:2px solid rgba(249,168,201,.3);animation:cardIn .25s cubic-bezier(.22,.68,0,1.2) both;}
+.card-word{font-family:'Fredoka One',cursive;font-size:36px;color:#3D2C40;text-align:center;letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px;}
+.card-divider{height:2px;background:linear-gradient(90deg,#F9A8C9,#A8D4F9);border-radius:2px;margin-bottom:14px;}
+.tabu-list{display:flex;flex-direction:column;gap:7px;}
+.tabu-item{display:flex;align-items:center;gap:8px;background:#FFF0F5;border-radius:10px;padding:7px 12px;border:1px solid rgba(249,168,201,.4);}
+.tabu-word{font-size:14px;font-weight:700;color:#E8709A;text-transform:uppercase;letter-spacing:.06em;}
+
+/* Action buttons */
+.actions{display:flex;gap:8px;width:100%;}
+.btn-tabu{flex:1;background:linear-gradient(135deg,#FFB3C1,#F77E9B);color:#fff;padding:15px 4px;font-size:13px;line-height:1.5;border-radius:18px;box-shadow:0 4px 14px rgba(255,179,193,.6);}
+.btn-skip{flex:1;background:linear-gradient(135deg,#FFE599,#FFD55A);color:#C9960A;padding:15px 4px;font-size:13px;line-height:1.5;border-radius:18px;box-shadow:0 4px 14px rgba(255,229,153,.6);}
+.btn-correct{flex:1.3;background:linear-gradient(135deg,#A8DFC9,#5ECFA0);color:#fff;padding:15px 4px;font-size:14px;line-height:1.5;border-radius:18px;box-shadow:0 4px 14px rgba(168,223,201,.6);}
+
+/* History chips */
+.history-chips{width:100%;display:flex;flex-direction:column;gap:4px;}
+.history-chip{display:flex;align-items:center;gap:8px;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;color:#3D2C40;}
+
+/* Review */
+.review-stats{display:flex;gap:10px;width:100%;}
+.stat-box{flex:1;border-radius:18px;padding:14px 8px;text-align:center;border:2px solid;}
+.stat-num{font-family:'Fredoka One',cursive;font-size:36px;line-height:1;}
+.stat-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+.history-list{width:100%;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+.history-row{display:flex;align-items:center;gap:8px;border-left:4px solid;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700;color:#3D2C40;}
+
+/* Flash overlay */
+#flash{position:fixed;inset:0;pointer-events:none;z-index:999;opacity:0;}
+
+/* Fonts fallback */
+@supports not (font-family: 'Fredoka One'){
+  .logo,.score-num,.timer-num,.card-word,.stat-num{font-family:Georgia,serif;font-weight:900;}
+}
+</style>
+</head>
+<body>
+<div id="flash"></div>
+<div id="app"><div class="screen" id="screen"></div></div>
+
+<script>
+// ═══════════════════════════════════════
+//  CARDS DATA
+// ═══════════════════════════════════════
+const CARDS = [
+  { palabra:"ELEFANTE",tabu:["TROMPA","GRANDE","AFRICA","ANIMAL"] },
+  { palabra:"PIZZA",tabu:["ITALIA","QUESO","MASA","HORNO"] },
+  { palabra:"GUITARRA",tabu:["MUSICA","CUERDAS","INSTRUMENTO","TOCAR"] },
+  { palabra:"AVION",tabu:["VOLAR","CIELO","VIAJE","ALAS"] },
+  { palabra:"MEDICO",tabu:["HOSPITAL","ENFERMO","SALUD","DOCTOR"] },
+  { palabra:"PLAYA",tabu:["MAR","ARENA","SOL","VERANO"] },
+  { palabra:"BIBLIOTECA",tabu:["LIBROS","LEER","SILENCIO","ESTANTES"] },
+  { palabra:"FUTBOL",tabu:["PELOTA","GOL","CANCHA","DEPORTE"] },
+  { palabra:"MARIPOSA",tabu:["ALAS","VOLAR","INSECTO","FLOR"] },
+  { palabra:"HELADERA",tabu:["FRIO","COMIDA","COCINA","CONGELAR"] },
+  { palabra:"JIRAFA",tabu:["CUELLO","ALTO","AFRICA","ANIMAL"] },
+  { palabra:"TREN",tabu:["VIAS","LOCOMOTORA","VIAJE","ESTACION"] },
+  { palabra:"CASTILLO",tabu:["REY","MEDIEVAL","TORRE","PIEDRA"] },
+  { palabra:"VOLCAN",tabu:["LAVA","ERUPCION","FUEGO","MONTANA"] },
+  { palabra:"DELFIN",tabu:["MAR","INTELIGENTE","NADAR","MAMIFERO"] },
+  { palabra:"COMPUTADORA",tabu:["PANTALLA","TECLADO","INTERNET","MOUSE"] },
+  { palabra:"COCINERO",tabu:["COCINA","COMIDA","CHEF","RESTAURANTE"] },
+  { palabra:"PIRAMIDE",tabu:["EGIPTO","FARAON","ARENA","TRIANGULO"] },
+  { palabra:"PERIODICO",tabu:["NOTICIAS","LEER","PAPEL","DIARIO"] },
+  { palabra:"SUBMARINO",tabu:["MAR","PROFUNDO","NAVE","AGUA"] },
+  { palabra:"CIRCO",tabu:["PAYASO","ACROBATA","CARPA","ANIMALES"] },
+  { palabra:"ESPEJO",tabu:["REFLEJO","VIDRIO","VERSE","IMAGEN"] },
+  { palabra:"TIBURON",tabu:["DIENTES","MAR","PELIGROSO","ALETA"] },
+  { palabra:"PANADERIA",tabu:["PAN","HORNO","HARINA","DULCE"] },
+  { palabra:"ASTRONAUTA",tabu:["ESPACIO","LUNA","NAVE","COHETE"] },
+  { palabra:"PARAGUAS",tabu:["LLUVIA","MOJARSE","ABRIR","AGUA"] },
+  { palabra:"CANGREJO",tabu:["PINZAS","MAR","CAMINAR","ROJO"] },
+  { palabra:"ZAPATO",tabu:["PIE","CAMINAR","CUERO","SUELA"] },
+  { palabra:"TORNADO",tabu:["VIENTO","DESTRUIR","GIRAR","TORMENTA"] },
+  { palabra:"MURCIELAGO",tabu:["NOCHE","VOLAR","CUEVA","VAMPIRO"] },
+  { palabra:"SEMAFORO",tabu:["ROJO","VERDE","TRAFICO","CALLE"] },
+  { palabra:"HELADO",tabu:["FRIO","DULCE","VERANO","SABORES"] },
+  { palabra:"CACTUS",tabu:["ESPINAS","DESIERTO","PLANTA","SECO"] },
+  { palabra:"BOMBERO",tabu:["FUEGO","MANGUERA","CAMION","RESCATE"] },
+  { palabra:"PINGUINO",tabu:["FRIO","ANTARTICA","NEGRO","NADAR"] },
+  { palabra:"DENTISTA",tabu:["DIENTES","DOLOR","MUELA","CONSULTORIO"] },
+  { palabra:"TELESCOPIO",tabu:["ESTRELLAS","VER","ESPACIO","LENTE"] },
+  { palabra:"CAIMAN",tabu:["REPTIL","DIENTES","RIO","VERDE"] },
+  { palabra:"MOCHILA",tabu:["ESCUELA","CARGAR","ESPALDA","VIAJE"] },
+  { palabra:"GLOBO",tabu:["AIRE","FLOTAR","COLORIDO","FIESTA"] },
+  { palabra:"ARAÑA",tabu:["TELA","VENENO","INSECTO","PATAS"] },
+  { palabra:"FARMACIA",tabu:["MEDICAMENTO","ENFERMO","PASTILLA","RECETA"] },
+  { palabra:"LORO",tabu:["HABLAR","PLUMAS","COLORIDO","JAULA"] },
+  { palabra:"ESCALERA",tabu:["SUBIR","BAJAR","PELDANO","ALTURA"] },
+  { palabra:"NAUFRAGIO",tabu:["BARCO","AGUA","HUNDIRSE","MAR"] },
+  { palabra:"CAMELLO",tabu:["JOROBA","DESIERTO","ARENA","ANIMAL"] },
+  { palabra:"BUFANDA",tabu:["FRIO","CUELLO","LANA","INVIERNO"] },
+  { palabra:"TERREMOTO",tabu:["SUELO","TEMBLAR","DERRUMBE","SEISMO"] },
+  { palabra:"MONEDA",tabu:["DINERO","METAL","CARA","COMPRAR"] },
+  { palabra:"TIGRE",tabu:["RAYAS","SELVA","FELINO","PELIGROSO"] },
+  { palabra:"BRUJULA",tabu:["NORTE","NAVEGAR","ORIENTAR","AGUJA"] },
+  { palabra:"SUSHI",tabu:["JAPON","ARROZ","PESCADO","ALGA"] },
+  { palabra:"CANCHA",tabu:["DEPORTE","JUGAR","PASTO","FUTBOL"] },
+  { palabra:"PULPO",tabu:["TENTACULOS","MAR","TINTA","OCHO"] },
+  { palabra:"ALFOMBRA",tabu:["PISO","SUELO","LANA","CUBRIR"] },
+  { palabra:"COHETE",tabu:["ESPACIO","LANZAR","FUEGO","NASA"] },
+  { palabra:"CARNICERIA",tabu:["CARNE","VACA","CORTE","KILO"] },
+  { palabra:"FANTASMA",tabu:["MIEDO","BLANCO","ESPIRITU","SUSTO"] },
+  { palabra:"MICROSCOPIO",tabu:["PEQUENO","VER","CIENCIA","LABORATORIO"] },
+  { palabra:"BALLENA",tabu:["MAR","GRANDE","MAMIFERO","AZUL"] },
+  { palabra:"CANDELABRO",tabu:["VELA","LUZ","METAL","MESA"] },
+  { palabra:"MARATON",tabu:["CORRER","KILOMETROS","ATLETISMO","RESISTENCIA"] },
+  { palabra:"NIEVE",tabu:["FRIO","BLANCO","INVIERNO","MONTANA"] },
+  { palabra:"MERCADO",tabu:["COMPRAR","VERDURA","VENDER","PUESTO"] },
+  { palabra:"TANGO",tabu:["BAILE","ARGENTINA","PAREJA","MUSICA"] },
+  { palabra:"MATE",tabu:["YERBA","CALIENTE","TOMAR","BOMBILLA"] },
+  { palabra:"ASADO",tabu:["CARNE","PARRILLA","FUEGO","BRASA"] },
+  { palabra:"ESTANCIA",tabu:["CAMPO","GAUCHO","VACA","RURAL"] },
+  { palabra:"CANDOMBE",tabu:["TAMBOR","AFRICA","CARNAVAL","RITMO"] },
+  { palabra:"VELERO",tabu:["VELA","MAR","VIENTO","NAVEGAR"] },
+  { palabra:"QUESO",tabu:["LECHE","VACA","AMARILLO","RALLADO"] },
+  { palabra:"CARACOL",tabu:["CONCHA","LENTO","CUERNOS","TIERRA"] },
+  { palabra:"LADRILLO",tabu:["PARED","CONSTRUCCION","ROJO","BARRO"] },
+  { palabra:"DETECTIVE",tabu:["INVESTIGAR","CRIMEN","PISTOLA","CASO"] },
+  { palabra:"CASCADA",tabu:["AGUA","CAER","RIO","NATURAL"] },
+  { palabra:"CANGURO",tabu:["AUSTRALIA","BOLSA","SALTAR","MARSUPIAL"] },
+  { palabra:"DINOSAURIO",tabu:["EXTINCION","FOSIL","GRANDE","PREHISTORICO"] },
+  { palabra:"CARRUSEL",tabu:["GIRAR","CABALLO","PARQUE","NINOS"] },
+  { palabra:"CEBRA",tabu:["RAYAS","AFRICA","CABALLO","BLANCO"] },
+  { palabra:"ACUARIO",tabu:["PEZ","AGUA","VIDRIO","ALGAS"] },
+  { palabra:"NIDO",tabu:["PAJARO","HUEVO","ARBOL","CONSTRUIR"] },
+  { palabra:"VOLEIBOL",tabu:["RED","PELOTA","PLAYA","SALTAR"] },
+  { palabra:"MAQUILLAJE",tabu:["CARA","PINTURA","MUJER","BELLEZA"] },
+  { palabra:"ESTATUA",tabu:["PIEDRA","ESCULTURA","PLAZA","FIGURA"] },
+  { palabra:"GRUA",tabu:["CONSTRUCCION","LEVANTAR","CABLE","OBRA"] },
+  { palabra:"LIMON",tabu:["AGRIO","AMARILLO","JUGO","FRUTA"] },
+  { palabra:"LUPA",tabu:["VER","AUMENTAR","DETECTIVE","REDONDA"] },
+  { palabra:"ABANICO",tabu:["AIRE","CALOR","JAPON","ABRIR"] },
+  { palabra:"LINTERNA",tabu:["LUZ","OSCURIDAD","PILA","ILUMINAR"] },
+  { palabra:"CARNAVAL",tabu:["FIESTA","DISFRAZ","MUSICA","BAILE"] },
+  { palabra:"LAGARTIJA",tabu:["REPTIL","COLA","PARED","PEQUENA"] },
+  { palabra:"FARO",tabu:["MAR","LUZ","BARCO","COSTA"] },
+  { palabra:"TRIDENTE",tabu:["POSEIDON","TRES","PUNTAS","DIOS"] },
+  { palabra:"RESORTE",tabu:["SALTAR","METAL","ESPIRAL","ELASTICO"] },
+  { palabra:"CALABAZA",tabu:["HALLOWEEN","NARANJA","TALLADO","SEMILLAS"] },
+  { palabra:"CATARATA",tabu:["AGUA","CAER","RIO","IGUAZU"] },
+  { palabra:"BRINDIS",tabu:["COPA","CHAMPAGNE","CELEBRAR","BEBER"] },
+  { palabra:"GORILA",tabu:["MONO","SELVA","GRANDE","AFRICA"] },
+  { palabra:"HIPOPOTAMO",tabu:["GRANDE","AFRICA","RIO","BOCA"] },
+  { palabra:"RINOCERONTE",tabu:["CUERNO","AFRICA","GRANDE","GRIS"] },
+  { palabra:"COCODRILO",tabu:["DIENTES","RIO","REPTIL","VERDE"] },
+  { palabra:"LEON",tabu:["MELENA","AFRICA","RUGIR","REY"] },
+  { palabra:"LEOPARDO",tabu:["MANCHAS","AFRICA","FELINO","RAPIDO"] },
+  { palabra:"AVESTRUZ",tabu:["GRANDE","CORRER","PLUMAS","AFRICA"] },
+  { palabra:"TORTUGA",tabu:["CAPARAZON","LENTA","REPTIL","MAR"] },
+  { palabra:"AGUILA",tabu:["VOLAR","GARRA","PICO","RAPAZ"] },
+  { palabra:"LOBO",tabu:["AULLAR","MANADA","BOSQUE","PERRO"] },
+  { palabra:"RANA",tabu:["SALTAR","VERDE","AGUA","SAPO"] },
+  { palabra:"SERPIENTE",tabu:["VENENO","REPTIL","ESCAMAS","MORDER"] },
+  { palabra:"BUHO",tabu:["NOCHE","OJOS","SABIO","BOSQUE"] },
+  { palabra:"FOCA",tabu:["MAR","FRIO","PELOTA","NADAR"] },
+  { palabra:"PANDA",tabu:["CHINA","BAMBU","BLANCO","NEGRO"] },
+  { palabra:"MAPACHE",tabu:["OJERAS","BASURA","NOCTURNO","NORTEAMERICA"] },
+  { palabra:"CASTOR",tabu:["DIENTES","REPRESA","RIO","MADERA"] },
+  { palabra:"HIENA",tabu:["REIR","AFRICA","CARROÑA","MANADA"] },
+  { palabra:"CIERVO",tabu:["CUERNOS","BOSQUE","CORRER","VENADO"] },
+  { palabra:"NUTRIA",tabu:["RIO","NADAR","PELO","MANOS"] },
+  { palabra:"MEDUSA",tabu:["MAR","TRANSPARENTE","PICAR","TENTACULOS"] },
+  { palabra:"CABALLO",tabu:["MONTAR","CORRER","CRIN","CAMPO"] },
+  { palabra:"BURRO",tabu:["OREJAS","ANIMAL","TONTO","CARGA"] },
+  { palabra:"OVEJA",tabu:["LANA","BLANCA","BALIDO","CAMPO"] },
+  { palabra:"CHANCHO",tabu:["SUCIO","GRANJA","GRUÑIR","GRASA"] },
+  { palabra:"GALLINA",tabu:["HUEVO","GRANJA","CLOQUEAR","COBARDE"] },
+  { palabra:"PATO",tabu:["CUAK","AGUA","PICO","PLUMAS"] },
+  { palabra:"CONEJO",tabu:["OREJAS","ZANAHORIA","SALTAR","PELO"] },
+  { palabra:"CANARIO",tabu:["CANTAR","AMARILLO","JAULA","PAJARO"] },
+  { palabra:"JAGUAR",tabu:["MANCHAS","SELVA","FELINO","AMERICA"] },
+  { palabra:"EMPANADA",tabu:["MASA","RELLENA","HORNO","ARGENTINA"] },
+  { palabra:"MILANESA",tabu:["CARNE","APANADA","FRITA","ARGENTINA"] },
+  { palabra:"ALFAJOR",tabu:["DULCE","CHOCOLATE","GALLETA","ARGENTINA"] },
+  { palabra:"MEDIALUНА",tabu:["PANADERIA","DULCE","CAFE","DESAYUNO"] },
+  { palabra:"CHURRASCO",tabu:["CARNE","PARRILLA","BRASA","ASADO"] },
+  { palabra:"MORCILLA",tabu:["SANGRE","ASADO","INTESTINO","NEGRA"] },
+  { palabra:"CHORIZO",tabu:["EMBUTIDO","ASADO","CARNE","PARRILLA"] },
+  { palabra:"LOCRO",tabu:["GUISO","INVIERNO","MAIZ","ARGENTINA"] },
+  { palabra:"DULCE DE LECHE",tabu:["LECHE","DULCE","UNTAR","ARGENTINA"] },
+  { palabra:"FLAN",tabu:["POSTRE","DULCE","HUEVO","CARAMELO"] },
+  { palabra:"TORTA",tabu:["DULCE","CUMPLEANOS","CREMA","HORNO"] },
+  { palabra:"MERMELADA",tabu:["DULCE","FRUTA","UNTAR","FRASCO"] },
+  { palabra:"MAYONESA",tabu:["SALSA","HUEVO","BLANCA","UNTAR"] },
+  { palabra:"KETCHUP",tabu:["TOMATE","SALSA","ROJO","CONDIMENTO"] },
+  { palabra:"AJO",tabu:["OLOR","BLANCO","CONDIMENTO","VAMPIRO"] },
+  { palabra:"CEBOLLA",tabu:["LLORAR","REDONDA","CONDIMENTO","CAPAS"] },
+  { palabra:"ZANAHORIA",tabu:["NARANJA","CONEJO","VERDURA","LARGA"] },
+  { palabra:"LECHUGA",tabu:["VERDE","ENSALADA","HOJA","FRESCA"] },
+  { palabra:"TOMATE",tabu:["ROJO","ENSALADA","REDONDO","SALSA"] },
+  { palabra:"ZAPALLO",tabu:["NARANJA","GUISO","REDONDO","SEMILLAS"] },
+  { palabra:"PAPA",tabu:["FRITA","PURE","TUBER","PLANTA"] },
+  { palabra:"BATATA",tabu:["DULCE","NARANJA","TUBER","POSTRE"] },
+  { palabra:"MANZANA",tabu:["ROJA","FRUTA","ARBOL","EVA"] },
+  { palabra:"NARANJA",tabu:["JUGO","VITAMINA","FRUTA","COLOR"] },
+  { palabra:"DURAZNO",tabu:["PELUDO","VERANO","FRUTA","AMARILLO"] },
+  { palabra:"FRUTILLA",tabu:["ROJA","FRUTA","DULCE","CREMA"] },
+  { palabra:"BANANA",tabu:["AMARILLA","CURVA","FRUTA","MONO"] },
+  { palabra:"UVA",tabu:["VINO","RACIMO","DULCE","FRUTA"] },
+  { palabra:"SANDIA",tabu:["ROJA","VERDE","VERANO","SEMILLAS"] },
+  { palabra:"ANAÑA",tabu:["TROPICAL","AMARILLA","CORONA","FRUTA"] },
+  { palabra:"KIWI",tabu:["VERDE","PEQUENO","FRUTA","ACIDO"] },
+  { palabra:"DESIERTO",tabu:["CALOR","ARENA","SECO","CAMELLO"] },
+  { palabra:"SELVA",tabu:["ARBOLES","HUMEDA","ANIMALES","AMAZON"] },
+  { palabra:"GLACIAR",tabu:["HIELO","FRIO","ANTARTIDA","AGUA"] },
+  { palabra:"ACANTILADO",tabu:["PIEDRA","MAR","ALTO","CAER"] },
+  { palabra:"ARRECIFE",tabu:["CORAL","MAR","PECES","COLORIDO"] },
+  { palabra:"PANTANO",tabu:["HUMEDO","LODO","RANA","VERDE"] },
+  { palabra:"OASIS",tabu:["DESIERTO","AGUA","PALMA","REFUGIO"] },
+  { palabra:"PAMPAS",tabu:["ARGENTINA","GAUCHO","LLANURA","VACA"] },
+  { palabra:"CORDILLERA",tabu:["MONTANA","ANDES","NIEVE","ALTA"] },
+  { palabra:"ABOGADO",tabu:["JUICIO","LEY","TRIBUNAL","CLIENTE"] },
+  { palabra:"ARQUITECTO",tabu:["EDIFICIO","DISENO","PLANO","CONSTRUIR"] },
+  { palabra:"ENFERMERO",tabu:["HOSPITAL","CUIDAR","JERINGA","SALUD"] },
+  { palabra:"MAESTRO",tabu:["ESCUELA","ENSENAR","NINOS","PIZARRON"] },
+  { palabra:"PLOMERO",tabu:["CANO","AGUA","GRIFO","REPARAR"] },
+  { palabra:"ELECTRICISTA",tabu:["LUZ","CABLE","CORRIENTE","ENCHUFE"] },
+  { palabra:"FOTOGRAFO",tabu:["CAMARA","FOTO","LENTE","IMAGEN"] },
+  { palabra:"PERIODISTA",tabu:["NOTICIAS","MICROFONO","ENTREVISTAR","PRENSA"] },
+  { palabra:"PILOTO",tabu:["AVION","VOLAR","CABINA","COMANDAR"] },
+  { palabra:"VETERINARIO",tabu:["ANIMAL","CUIDAR","CLINICA","MASCOTA"] },
+  { palabra:"PSICOLOGO",tabu:["MENTE","TERAPIA","SILLON","HABLAR"] },
+  { palabra:"JUEZ",tabu:["TRIBUNAL","LEY","SENTENCIA","TOGA"] },
+  { palabra:"POLICIA",tabu:["UNIFORME","PATRULLA","CRIMEN","ORDEN"] },
+  { palabra:"MECANICO",tabu:["AUTO","MOTOR","REPARAR","TALLER"] },
+  { palabra:"SOLDADO",tabu:["EJERCITO","GUERRA","ARMA","UNIFORME"] },
+  { palabra:"MARINERO",tabu:["BARCO","MAR","UNIFORME","NAVEGAR"] },
+  { palabra:"ESCULTOR",tabu:["PIEDRA","CINCEL","FIGURA","ARTE"] },
+  { palabra:"BAILARIN",tabu:["DANZA","MUSICA","ESCENA","MOVIMIENTO"] },
+  { palabra:"ACTOR",tabu:["PELICULA","TEATRO","PAPEL","ACTUAR"] },
+  { palabra:"ESCRITOR",tabu:["LIBRO","NOVELA","PLUMA","HISTORIA"] },
+  { palabra:"POETA",tabu:["VERSO","RIMA","SENTIMIENTO","ESCRIBIR"] },
+  { palabra:"MUSICO",tabu:["INSTRUMENTO","TOCAR","MELODIA","NOTA"] },
+  { palabra:"TIJERA",tabu:["CORTAR","AFILAR","TELA","PUNTAS"] },
+  { palabra:"ESCOBA",tabu:["BARRER","PISO","BRUJA","MANGO"] },
+  { palabra:"BALDE",tabu:["AGUA","PLASTICO","REDONDO","LAVAR"] },
+  { palabra:"ENCHUFE",tabu:["LUZ","ELECTRICIDAD","PARED","CONECTAR"] },
+  { palabra:"CORTINA",tabu:["VENTANA","TELA","COLGAR","SOL"] },
+  { palabra:"CLAVO",tabu:["MARTILLO","METAL","PUNTA","PARED"] },
+  { palabra:"TORNILLO",tabu:["DESTORNILLADOR","METAL","ROSCA","ATORNILLAR"] },
+  { palabra:"MARTILLO",tabu:["GOLPEAR","METAL","CLAVO","HERRAMIENTA"] },
+  { palabra:"SIERRA",tabu:["CORTAR","MADERA","DIENTES","HERRAMIENTA"] },
+  { palabra:"REGLA",tabu:["MEDIR","RECTA","PLASTICO","ESCUELA"] },
+  { palabra:"CALCULADORA",tabu:["NUMEROS","SUMAR","RESTAR","TECLAS"] },
+  { palabra:"AURICULARES",tabu:["MUSICA","OIDO","ESCUCHAR","CABLE"] },
+  { palabra:"TENIS",tabu:["RAQUETA","PELOTA","RED","CANCHA"] },
+  { palabra:"BASQUET",tabu:["ARO","PELOTA","CANASTA","EQUIPO"] },
+  { palabra:"RUGBY",tabu:["OVAL","MELE","EMPUJAR","TACKLEAR"] },
+  { palabra:"NATACION",tabu:["PISCINA","NADAR","ESTILO","AGUA"] },
+  { palabra:"ATLETISMO",tabu:["CORRER","SALTAR","PISTA","VELOCIDAD"] },
+  { palabra:"BOXEO",tabu:["GOLPE","GUANTE","RING","PELEAR"] },
+  { palabra:"CICLISMO",tabu:["BICICLETA","PEDALEAR","TOUR","RUEDA"] },
+  { palabra:"ESQUI",tabu:["NIEVE","DESLIZAR","MONTANA","BASTONES"] },
+  { palabra:"SURF",tabu:["OLA","TABLA","MAR","PLAYA"] },
+  { palabra:"GOLF",tabu:["PALO","HOYO","PELOTA","CAMPO"] },
+  { palabra:"AJEDREZ",tabu:["REY","TABLERO","PIEZA","JAQUE"] },
+  { palabra:"TRUCO",tabu:["CARTAS","ARGENTINA","ENVITE","MAZO"] },
+  { palabra:"RAYO",tabu:["TORMENTA","LUZ","TRUENO","CAER"] },
+  { palabra:"GRANIZO",tabu:["LLUVIA","HIELO","CAER","TORMENTA"] },
+  { palabra:"NIEBLA",tabu:["NUBE","BAJA","VISIBILIDAD","HUMEDAD"] },
+  { palabra:"ARCO IRIS",tabu:["COLOR","LLUVIA","SOL","CURVA"] },
+  { palabra:"SEQUIA",tabu:["SECO","AGUA","CALOR","PLANTAS"] },
+  { palabra:"INUNDACION",tabu:["AGUA","LLUVIA","DESBORDE","RIO"] },
+  { palabra:"ECLIPSE",tabu:["SOL","LUNA","SOMBRA","CUBRIR"] },
+  { palabra:"AVALANCHA",tabu:["NIEVE","MONTANA","CAER","PELIGRO"] },
+  { palabra:"PELICULA",tabu:["CINE","ACTORES","PANTALLA","VER"] },
+  { palabra:"NOVELA",tabu:["LIBRO","FICCION","PERSONAJE","LEER"] },
+  { palabra:"TEATRO",tabu:["OBRA","ACTORES","ESCENARIO","PUBLICO"] },
+  { palabra:"OPERA",tabu:["CANTAR","MUSICA","TEATRO","CLASICO"] },
+  { palabra:"BALLET",tabu:["DANZA","TUTU","MUSICA","CLASICO"] },
+  { palabra:"CONCIERTO",tabu:["MUSICA","ESCENARIO","BANDA","PUBLICO"] },
+  { palabra:"MUSEO",tabu:["ARTE","HISTORIA","VISITAR","OBRA"] },
+  { palabra:"VACUNA",tabu:["ENFERMEDAD","INYECCION","PREVENIR","INMUNIDAD"] },
+  { palabra:"SATELITE",tabu:["ORBITA","ESPACIO","SENAL","COMUNICACION"] },
+  { palabra:"ROBOT",tabu:["MAQUINA","PROGRAMAR","ARTIFICIAL","METALICO"] },
+  { palabra:"INTERNET",tabu:["RED","CONECTAR","WEB","COMPUTADORA"] },
+  { palabra:"DEMOCRACIA",tabu:["VOTAR","GOBIERNO","PUEBLO","LIBERTAD"] },
+  { palabra:"FRONTERA",tabu:["PAIS","LIMITE","PASAR","ADUANA"] },
+  { palabra:"INDEPENDENCIA",tabu:["LIBERTAD","PAIS","SEPARARSE","BANDERA"] },
+  { palabra:"SACO",tabu:["ABRIGO","FRIO","MANGA","ROPA"] },
+  { palabra:"CAMPERA",tabu:["FRIO","ABRIGO","CIERRE","ROPA"] },
+  { palabra:"PANTALON",tabu:["ROPA","PIERNAS","TELA","JEAN"] },
+  { palabra:"REMERA",tabu:["CAMISETA","MANGA","TELA","ROPA"] },
+  { palabra:"CAMISA",tabu:["BOTON","FORMAL","MANGA","ROPA"] },
+  { palabra:"VESTIDO",tabu:["MUJER","ENTERA","TELA","ELEGANTE"] },
+  { palabra:"CORBATA",tabu:["CUELLO","TRAJE","FORMAL","NUDO"] },
+  { palabra:"SOMBRERO",tabu:["CABEZA","ALA","CUBIERTA","SOL"] },
+  { palabra:"CARTERA",tabu:["MUJER","BOLSA","CUERO","LLEVAR"] },
+  { palabra:"RELOJ",tabu:["TIEMPO","HORA","MUNECA","AGUJAS"] },
+  { palabra:"COLLAR",tabu:["CUELLO","JOYA","CADENA","ORO"] },
+  { palabra:"ANILLO",tabu:["DEDO","ORO","CASAMIENTO","JOYA"] },
+  { palabra:"LENTES",tabu:["OJOS","VER","VIDRIO","MARCO"] },
+  { palabra:"SILLON",tabu:["SENTARSE","SALA","COMODO","ALMOHADON"] },
+  { palabra:"SOFA",tabu:["SALA","SENTARSE","COMODO","COJIN"] },
+  { palabra:"MESA",tabu:["COMER","MADERA","PATAS","SUPERFICIE"] },
+  { palabra:"SILLA",tabu:["SENTARSE","PATAS","MADERA","RESPALDO"] },
+  { palabra:"CAMA",tabu:["DORMIR","COLCHON","ALMOHADA","DESCANSO"] },
+  { palabra:"ESPEJO",tabu:["VERSE","REFLEJO","VIDRIO","BANO"] },
+  { palabra:"JARRON",tabu:["FLORES","CERAMICA","DECORACION","AGUA"] },
+  { palabra:"MACETA",tabu:["PLANTA","TIERRA","CERAMICA","FLORES"] },
+  { palabra:"LAMPARA",tabu:["LUZ","TECHO","ILUMINAR","PANTALLA"] },
+  { palabra:"CUADERNO",tabu:["ESCRIBIR","HOJAS","ESCUELA","LAPIZ"] },
+  { palabra:"CALENDARIO",tabu:["FECHAS","MESES","ANO","DIAS"] },
+  { palabra:"PAYADOR",tabu:["CANTAR","GUITARRA","GAUCHO","IMPROVISAR"] },
+  { palabra:"PULPERIA",tabu:["ALMACEN","CAMPO","GAUCHO","BEBIDA"] },
+  { palabra:"FLAMENCO",tabu:["ROSA","PATA","AFRICA","PAJARO"] },
+  { palabra:"COLIBRI",tabu:["PEQUENO","FLORES","VOLAR","RAPIDO"] },
+  { palabra:"PAVO REAL",tabu:["PLUMAS","COLORIDO","COLA","PAJARO"] },
+  { palabra:"LECHUZA",tabu:["NOCHE","PAJARO","SILENCIO","BOSQUE"] },
+  { palabra:"PALOMA",tabu:["VOLAR","BLANCA","PAZ","CIUDAD"] },
+  { palabra:"HORMIGA",tabu:["PEQUENA","COLONIA","TRABAJO","INSECTO"] },
+  { palabra:"GOLONDRINA",tabu:["VOLAR","PRIMAVERA","NIDO","PAJARO"] },
+  { palabra:"PIRANÃ",tabu:["DIENTES","RIO","AMAZON","PELIGROSO"] },
+  { palabra:"ESTRELLA DE MAR",tabu:["CINCO","PUNTAS","MAR","PLAYA"] },
+  { palabra:"LANGOSTA",tabu:["MAR","PINZAS","ROJO","MARISCO"] },
+  { palabra:"ACANTILADO",tabu:["PIEDRA","MAR","ALTO","CAER"] },
+  { palabra:"BAHIA",tabu:["MAR","COSTA","BOTE","ENTRADA"] },
+  { palabra:"DELTA",tabu:["RIO","AGUA","DESEMBOCADURA","ISLA"] },
+  { palabra:"LAGUNA",tabu:["AGUA","PEQUENA","LAGO","PAZ"] },
+  { palabra:"CANON",tabu:["PROFUNDO","RIO","ROCA","ARIZONA"] },
+  { palabra:"PENINSULA",tabu:["MAR","TIERRA","RODEADA","ESPAÑA"] },
+  { palabra:"ARCHIPIELAGO",tabu:["ISLAS","MAR","GRUPO","GRECIA"] },
+  { palabra:"CONTADOR",tabu:["NUMEROS","DINERO","IMPUESTO","PLANILLA"] },
+  { palabra:"PINTOR",tabu:["BROCHA","PARED","COLOR","PINTURA"] },
+  { palabra:"QUIMICO",tabu:["LABORATORIO","FORMULA","ELEMENTO","REACCION"] },
+  { palabra:"HISTORIADOR",tabu:["PASADO","HISTORIA","FECHAS","INVESTIGAR"] },
+  { palabra:"DISEÑADOR",tabu:["GRAFICA","CREAR","ARTE","COMPUTADORA"] },
+  { palabra:"JOYERO",tabu:["ORO","DIAMANTE","ANILLO","TIENDA"] },
+  { palabra:"ZAPATERO",tabu:["ZAPATO","COSER","CUERO","ARREGLAR"] },
+  { palabra:"PLANCHA",tabu:["ROPA","CALOR","VAPOR","ARRUGAS"] },
+  { palabra:"ESPONJA",tabu:["LAVAR","SUAVE","ABSORBER","PLATOS"] },
+  { palabra:"GRIFO",tabu:["AGUA","ABRIR","BANO","LLAVE"] },
+  { palabra:"INTERRUPTOR",tabu:["LUZ","PRENDER","APAGAR","PARED"] },
+  { palabra:"VELADOR",tabu:["LUZ","MESA","NOCHE","LAMPARA"] },
+  { palabra:"PERSIANA",tabu:["VENTANA","MADERA","BAJAR","LUZ"] },
+  { palabra:"TALADRO",tabu:["PERFORAR","PARED","RUIDO","HERRAMIENTA"] },
+  { palabra:"IMPRESORA",tabu:["PAPEL","TINTA","IMPRIMIR","COMPUTADORA"] },
+  { palabra:"PENDRIVE",tabu:["DATOS","USB","GUARDAR","PEQUENO"] },
+  { palabra:"ESGRIMA",tabu:["ESPADA","DUELO","MASCARA","DEPORTE"] },
+  { palabra:"JUDO",tabu:["JAPON","TIRAR","CINTURON","LUCHA"] },
+  { palabra:"KARATE",tabu:["GOLPE","JAPON","CINTURON","PATADA"] },
+  { palabra:"POLO",tabu:["CABALLO","PALO","PELOTA","CAMPO"] },
+  { palabra:"ESCALADA",tabu:["ROCA","SUBIR","CUERDA","MONTANA"] },
+  { palabra:"PARACAIDAS",tabu:["SALTAR","AVION","CAER","CIELO"] },
+  { palabra:"DOMINÓ",tabu:["FICHA","PUNTOS","COLOCAR","JUEGO"] },
+  { palabra:"RULETA",tabu:["CASINO","GIRAR","NUMEROS","APOSTAR"] },
+  { palabra:"DADOS",tabu:["TIRAR","NUMEROS","SEIS","CUADRADO"] },
+  { palabra:"TRUENO",tabu:["TORMENTA","RUIDO","RAYO","NUBE"] },
+  { palabra:"AURORA BOREAL",tabu:["LUCES","NORTE","CIELO","COLORES"] },
+  { palabra:"MITO",tabu:["GRECIA","DIOSES","HISTORIA","FANTASIA"] },
+  { palabra:"LEYENDA",tabu:["HISTORIA","ANTIGUA","PUEBLO","FANTASIA"] },
+  { palabra:"FESTIVAL",tabu:["MUSICA","FIESTA","MULTITUD","CAMPO"] },
+  { palabra:"GALERIA",tabu:["ARTE","PINTURA","EXPOSICION","CUADROS"] },
+  { palabra:"CELULA",tabu:["VIDA","MICROSCOPIO","ORGANISMO","NUCLEO"] },
+  { palabra:"EVOLUCION",tabu:["DARWIN","ESPECIES","CAMBIO","TIEMPO"] },
+  { palabra:"LASER",tabu:["LUZ","CONCENTRADA","CORTAR","RAYO"] },
+  { palabra:"MONARQUIA",tabu:["REY","CORONA","REINO","HERENCIA"] },
+  { palabra:"CONSTITUCION",tabu:["LEY","FUNDAMENTAL","ESTADO","DERECHOS"] },
+  { palabra:"MIGRACION",tabu:["MUDARSE","PAIS","VIAJAR","EXTRANJERO"] },
+  { palabra:"RENACIMIENTO",tabu:["ARTE","EUROPA","ITALIA","CULTURA"] },
+  { palabra:"PULSERA",tabu:["MUNECA","JOYA","ORO","ADORNO"] },
+  { palabra:"CINTURON",tabu:["PANTALON","CUERO","HEBILLA","CINTURA"] },
+  { palabra:"GORRA",tabu:["CABEZA","VISERA","DEPORTIVA","TELA"] },
+  { palabra:"BILLETERA",tabu:["DINERO","BOLSILLO","CUERO","TARJETA"] },
+  { palabra:"PANUELO",tabu:["NARIZ","TELA","ESTORNUDAR","BOLSILLO"] },
+  { palabra:"ESCRITORIO",tabu:["TRABAJAR","COMPUTADORA","MADERA","OFICINA"] },
+  { palabra:"PLACARD",tabu:["ROPA","GUARDAR","ARMARIO","ESPEJO"] },
+  { palabra:"ESTANTE",tabu:["REPISAS","PARED","GUARDAR","MADERA"] },
+  { palabra:"CUADRO",tabu:["PARED","PINTURA","COLGAR","MARCO"] },
+];
+
+// ═══════════════════════════════════════
+//  AUDIO ENGINE
+// ═══════════════════════════════════════
+let audioCtx = null;
+let masterGain = null;
+let musicPlaying = false;
+let musicLoopTimer = null;
+let musicPlayingRef = false;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.12;
+    masterGain.connect(audioCtx.destination);
+  }
+  return audioCtx;
+}
+
+function playNote(type, freq, start, dur, vol, dest) {
+  const ac = audioCtx;
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(g); g.connect(dest);
+  g.gain.setValueAtTime(0, start);
+  g.gain.linearRampToValueAtTime(vol, start + 0.04);
+  g.gain.setValueAtTime(vol, start + Math.max(dur - 0.06, 0.05));
+  g.gain.linearRampToValueAtTime(0, start + dur);
+  osc.start(start); osc.stop(start + dur + 0.02);
+}
+
+function playBandoneon(freq, start, dur) {
+  playNote('sawtooth', freq, start, dur, 0.4, masterGain);
+  playNote('sawtooth', freq * 1.003, start, dur, 0.2, masterGain);
+}
+
+function playBass(freq, start, dur) {
+  const ac = audioCtx;
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+  osc.type = 'triangle'; osc.frequency.value = freq;
+  osc.connect(g); g.connect(masterGain);
+  g.gain.setValueAtTime(0.5, start);
+  g.gain.exponentialRampToValueAtTime(0.001, start + Math.min(dur, 0.3));
+  osc.start(start); osc.stop(start + dur);
+}
+
+function playClick(start, vol) {
+  const ac = audioCtx;
+  const buf = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.05), ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-i/(ac.sampleRate*0.007));
+  const src = ac.createBufferSource();
+  const g = ac.createGain();
+  const f = ac.createBiquadFilter();
+  src.buffer = buf; f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 2;
+  src.connect(f); f.connect(g); g.connect(masterGain);
+  g.gain.value = vol; src.start(start);
+}
+
+function scheduleMilongaLoop(startTime) {
+  const B = 60/72, bar = B*4;
+  const N = {D3:146.83,E3:164.81,F3:174.61,G3:196,A3:220,Bb3:233.08,C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,Bb4:466.16,D5:587.33};
+  const melody = [
+    [N.D4,0,B*1.5],[N.F4,B*1.5,B*.5],[N.A4,B*2,B*1.5],[N.G4,B*3.5,B*.5],
+    [N.F4,bar,B],[N.E4,bar+B,B*.5],[N.D4,bar+B*1.5,B*1.5],[N.C4,bar+B*3,B],
+    [N.E4,bar*2,B],[N.F4,bar*2+B,B],[N.G4,bar*2+B*2,B],[N.A4,bar*2+B*3,B*.75],[N.Bb4,bar*2+B*3.75,B*.25],
+    [N.A4,bar*3,B*1.5],[N.F4,bar*3+B*1.5,B*.5],[N.D4,bar*3+B*2,B*2],
+  ];
+  const bass = [
+    [N.D3,0,B],[N.A3,B,B*.5],[N.D3,B*2,B],[N.A3,B*3,B*.5],
+    [N.C4,bar,B],[N.G3,bar+B,B*.5],[N.F3,bar+B*2,B],[N.C4,bar+B*3,B*.5],
+    [N.Bb3,bar*2,B],[N.F3,bar*2+B,B*.5],[N.G3,bar*2+B*2,B],[N.D3,bar*2+B*3,B*.5],
+    [N.A3,bar*3,B],[N.E3,bar*3+B,B*.5],[N.D3,bar*3+B*2,B*2],
+  ];
+  const rhy = [0,B*.5,B,B*1.5,B*2,B*2.5,B*3,B*3.5];
+  const vol = [.2,.09,.16,.09,.2,.09,.14,.09];
+  for (let b=0;b<4;b++) rhy.forEach((o,i) => playClick(startTime+bar*b+o, vol[i]));
+  melody.forEach(([f,o,d]) => playBandoneon(f, startTime+o, d));
+  bass.forEach(([f,o,d]) => playBass(f, startTime+o, d));
+  return bar * 4;
+}
+
+function startMusic() {
+  if (musicPlayingRef) return;
+  musicPlayingRef = true;
+  getAudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  let next = audioCtx.currentTime + 0.1;
+  function tick() {
+    if (!musicPlayingRef) return;
+    const dur = scheduleMilongaLoop(next);
+    next += dur;
+    musicLoopTimer = setTimeout(tick, (dur - 1) * 1000);
+  }
+  tick();
+  musicPlaying = true;
+}
+
+function stopMusic() {
+  musicPlayingRef = false;
+  clearTimeout(musicLoopTimer);
+  if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+  musicPlaying = false;
+}
+
+function toggleMusic() {
+  if (musicPlaying) stopMusic(); else startMusic();
+  renderCurrent();
+}
+
+// SFX
+function sfxCorrect() {
+  const ac = getAudioCtx(); if (ac.state==='suspended') ac.resume();
+  const t = ac.currentTime;
+  [[523.25,0],[659.25,.13]].forEach(([f,dt]) => {
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0,t+dt); g.gain.linearRampToValueAtTime(.35,t+dt+.02); g.gain.exponentialRampToValueAtTime(.001,t+dt+.35);
+    o.start(t+dt); o.stop(t+dt+.36);
+  });
+}
+function sfxTabu() {
+  const ac = getAudioCtx(); if (ac.state==='suspended') ac.resume();
+  const t = ac.currentTime;
+  [[220,0],[185,.1],[155,.2]].forEach(([f,dt]) => {
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.type='sawtooth'; o.frequency.value=f; o.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(.28,t+dt); g.gain.exponentialRampToValueAtTime(.001,t+dt+.18);
+    o.start(t+dt); o.stop(t+dt+.2);
+  });
+}
+function sfxSkip() {
+  const ac = getAudioCtx(); if (ac.state==='suspended') ac.resume();
+  const t = ac.currentTime;
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(440,t); o.frequency.linearRampToValueAtTime(320,t+.15);
+  o.connect(g); g.connect(ac.destination);
+  g.gain.setValueAtTime(.25,t); g.gain.exponentialRampToValueAtTime(.001,t+.2);
+  o.start(t); o.stop(t+.21);
+}
+
+// ═══════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════
+const TEAM_NAMES = ['Equipo Rojo', 'Equipo Azul'];
+const TC = [
+  { light:'#F9A8C9', dark:'#E8709A', grad:'linear-gradient(135deg,#F9A8C9,#E8709A)' },
+  { light:'#A8D4F9', dark:'#3A8EDE', grad:'linear-gradient(135deg,#A8D4F9,#3A8EDE)' },
+];
+const TURN_DURATION = 60;
+
+let state = {
+  screen: 'home',
+  scores: [0, 0],
+  currentTeam: 0,
+  round: 1,
+  maxRounds: 3,
+  card: null,
+  timeLeft: TURN_DURATION,
+  timerInterval: null,
+  turnHistory: [],
+  usedIndices: new Set(),
+};
+
+function getRandomCard() {
+  const available = CARDS.map((_,i)=>i).filter(i=>!state.usedIndices.has(i));
+  if (available.length === 0) { state.usedIndices = new Set(); return CARDS[Math.floor(Math.random()*CARDS.length)]; }
+  const idx = available[Math.floor(Math.random()*available.length)];
+  state.usedIndices.add(idx);
+  return CARDS[idx];
+}
+
+function flash(color) {
+  const el = document.getElementById('flash');
+  el.style.background = color;
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'flashAnim .35s ease forwards';
+}
+
+function stopTimer() { clearInterval(state.timerInterval); state.timerInterval = null; }
+
+function startTimer() {
+  stopTimer();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    const el = document.getElementById('timer-num');
+    if (el) {
+      el.textContent = state.timeLeft;
+      const pct = state.timeLeft / TURN_DURATION;
+      const circle = document.getElementById('timer-circle');
+      if (circle) {
+        if (pct > 0.5)      { circle.style.borderColor='#3BAE7E'; circle.style.color='#3BAE7E'; circle.style.background='#A8DFC9'; circle.style.animation='none'; }
+        else if (pct > 0.2) { circle.style.borderColor='#E8854A'; circle.style.color='#E8854A'; circle.style.background='#FFCBA4'; circle.style.animation='none'; }
+        else                { circle.style.borderColor='#E8325A'; circle.style.color='#E8325A'; circle.style.background='#FFB3C1'; circle.style.animation='pulse .7s infinite'; }
+      }
+    }
+    if (state.timeLeft <= 0) { stopTimer(); state.screen = 'review'; renderCurrent(); }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════════════
+function startTurn() {
+  stopTimer();
+  state.screen = 'playing';
+  state.turnHistory = [];
+  state.timeLeft = TURN_DURATION;
+  state.card = getRandomCard();
+  renderCurrent();
+  startTimer();
+}
+
+function handleResult(result) {
+  if (!state.card) return;
+  if (result==='correct') { sfxCorrect(); flash('#B8F5D8'); state.scores[state.currentTeam]++; }
+  else if (result==='tabu') { sfxTabu(); flash('#FFB3C1'); state.scores[state.currentTeam]--; }
+  else { sfxSkip(); flash('#FFE9A0'); }
+  state.turnHistory.push({ word: state.card.palabra, result });
+  state.card = getRandomCard();
+  renderCard();
+  renderMiniHistory();
+  updateMiniScore();
+}
+
+function endTurn() { stopTimer(); state.screen = 'review'; renderCurrent(); }
+
+function nextTurn() {
+  const nextTeam = (state.currentTeam + 1) % 2;
+  const nextRound = nextTeam === 0 ? state.round + 1 : state.round;
+  if (nextRound > state.maxRounds) { state.screen = 'gameover'; renderCurrent(); return; }
+  state.currentTeam = nextTeam;
+  state.round = nextRound;
+  state.screen = 'home';
+  state.card = null;
+  state.timeLeft = TURN_DURATION;
+  state.turnHistory = [];
+  renderCurrent();
+}
+
+function resetGame() {
+  stopTimer();
+  state = { screen:'home', scores:[0,0], currentTeam:0, round:1, maxRounds:3, card:null, timeLeft:TURN_DURATION, timerInterval:null, turnHistory:[], usedIndices:new Set() };
+  renderCurrent();
+}
+
+// ═══════════════════════════════════════
+//  RENDER HELPERS
+// ═══════════════════════════════════════
+function musicBtn(compact) {
+  return `<button class="btn-music ${musicPlaying?'on':''}" onclick="toggleMusic()">
+    ${musicPlaying ? (compact ? '🎵 ON' : '🎵 Música: ON') : (compact ? '🎵 OFF' : '🎵 Música: OFF')}
+  </button>`;
+}
+
+function renderCard() {
+  const el = document.getElementById('card-area');
+  if (!el || !state.card) return;
+  el.innerHTML = `<div class="card">
+    <div class="card-word">${state.card.palabra}</div>
+    <div class="card-divider"></div>
+    <div class="tabu-list">
+      ${state.card.tabu.map(t=>`<div class="tabu-item"><span>🚫</span><span class="tabu-word">${t}</span></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderMiniHistory() {
+  const el = document.getElementById('mini-history');
+  if (!el) return;
+  const recent = [...state.turnHistory].reverse().slice(0,4);
+  el.innerHTML = recent.map((h,i) => {
+    const bg = h.result==='correct'?'#EEFAF4':h.result==='tabu'?'#FFF0F3':'#FFFBEA';
+    const bc = h.result==='correct'?'#A8DFC9':h.result==='tabu'?'#FFB3C1':'#FFE599';
+    const icon = h.result==='correct'?'✓':h.result==='tabu'?'🚫':'⏭';
+    return `<div class="history-chip" style="background:${bg};border:1px solid ${bc};opacity:${Math.max(.3,1-i*.22)}">${icon} ${h.word}</div>`;
+  }).join('');
+}
+
+function updateMiniScore() {
+  const ec = document.getElementById('mini-correct');
+  const et = document.getElementById('mini-tabu');
+  if (ec) ec.textContent = '✓ ' + state.turnHistory.filter(h=>h.result==='correct').length;
+  if (et) et.textContent = '🚫 ' + state.turnHistory.filter(h=>h.result==='tabu').length;
+}
+
+// ═══════════════════════════════════════
+//  SCREENS
+// ═══════════════════════════════════════
+function renderHome() {
+  const isFirst = state.round===1 && state.currentTeam===0;
+  const tc = TC[state.currentTeam];
+  const s = document.getElementById('screen');
+  s.style.animation='none'; s.offsetHeight; s.style.animation='fadeUp .35s both';
+
+  document.querySelectorAll('.blob').forEach(b=>b.remove());
+  [
+    {top:'-80px',right:'-80px',w:'260px',h:'260px',c:'#F9A8C9',o:.22},
+    {bottom:'-60px',left:'-60px',w:'200px',h:'200px',c:'#A8D4F9',o:.22},
+    {top:'38%',left:'-40px',w:'130px',h:'130px',c:'#A8DFC9',o:.18},
+  ].forEach(b => {
+    const d=document.createElement('div'); d.className='blob';
+    Object.assign(d.style,{width:b.w,height:b.h,background:b.c,opacity:b.o,
+      top:b.top||'',bottom:b.bottom||'',left:b.left||'',right:b.right||''});
+    document.body.appendChild(d);
+  });
+
+  s.innerHTML = `
+    <div class="logo">TABÚ</div>
+    <div class="${isFirst?'subtitle':'round-badge'}">${isFirst?'el juego de las palabras prohibidas':`Ronda ${state.round} de ${state.maxRounds}`}</div>
+    <div class="scoreboard">
+      ${TEAM_NAMES.map((name,i)=>{
+        const active = !isFirst && i===state.currentTeam;
+        return `<div class="score-card" style="background:${active?TC[i].grad:'#fff'};border-color:${active?TC[i].dark:TC[i].light};transform:${active?'scale(1.05)':'scale(1)'};box-shadow:${active?`0 8px 22px ${TC[i].light}99`:'0 2px 10px rgba(0,0,0,.06)'}">
+          <div class="score-name" style="color:${active?'#fff':TC[i].dark}">${name}</div>
+          <div class="score-num" style="color:${active?'#fff':'#3D2C40'}">${state.scores[i]}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${!isFirst?`<div class="turn-announce">Turno de <strong style="color:${tc.dark}">${TEAM_NAMES[state.currentTeam]}</strong></div>`:''}
+    <button class="btn btn-primary" style="background:${isFirst?'linear-gradient(135deg,#C8B8F0,#A78BFA)':tc.grad};box-shadow:0 6px 18px ${isFirst?'#C8B8F066':tc.light+'99'}" onclick="startTurn()">
+      ${isFirst?'✨ ¡Comenzar juego!':'🎯 ¡Empezar turno!'}
+    </button>
+    ${!isFirst?`<button class="btn-ghost" onclick="resetGame()">Reiniciar juego</button>`:''}
+    ${musicBtn(false)}
+  `;
+}
+
+function renderPlaying() {
+  const tc = TC[state.currentTeam];
+  const pct = state.timeLeft/TURN_DURATION;
+  const tColor = pct>.5?'#3BAE7E':pct>.2?'#E8854A':'#E8325A';
+  const tBg    = pct>.5?'#A8DFC9':pct>.2?'#FFCBA4':'#FFB3C1';
+
+  document.querySelectorAll('.blob').forEach(b=>b.remove());
+  [
+    {top:'-60px',right:'-60px',w:'190px',h:'190px',c:tc.light,o:.28},
+    {bottom:'-40px',left:'-40px',w:'150px',h:'150px',c:'#A8DFC9',o:.22},
+  ].forEach(b => {
+    const d=document.createElement('div'); d.className='blob';
+    Object.assign(d.style,{width:b.w,height:b.h,background:b.c,opacity:b.o,
+      top:b.top||'',bottom:b.bottom||'',left:b.left||'',right:b.right||''});
+    document.body.appendChild(d);
+  });
+
+  const correct = state.turnHistory.filter(h=>h.result==='correct').length;
+  const tabu    = state.turnHistory.filter(h=>h.result==='tabu').length;
+
+  const s = document.getElementById('screen');
+  s.style.animation='none';
+  s.innerHTML = `
+    <div class="timer-row">
+      <div class="timer-circle" id="timer-circle" style="border-color:${tColor};color:${tColor};background:${tBg}">
+        <span class="timer-num" id="timer-num">${state.timeLeft}</span>
+      </div>
+      <div style="flex:1">
+        <div class="team-badge" style="background:${tc.grad}">${TEAM_NAMES[state.currentTeam]}</div>
+      </div>
+      <div class="mini-score">
+        <span id="mini-correct" style="background:#D4F5E4;color:#3BAE7E">✓ ${correct}</span>
+        <span id="mini-tabu" style="background:#FFE0E8;color:#E8325A">🚫 ${tabu}</span>
+      </div>
+    </div>
+    <div id="card-area"></div>
+    <div class="actions">
+      <button class="btn btn-tabu" onclick="handleResult('tabu')">🚫<br/>Tabú</button>
+      <button class="btn btn-skip" onclick="handleResult('skip')">⏭<br/>Pasar</button>
+      <button class="btn btn-correct" onclick="handleResult('correct')">✓<br/>Correcto</button>
+    </div>
+    <button class="btn-ghost" onclick="endTurn()">Terminar turno</button>
+    ${musicBtn(true)}
+    <div class="history-chips" id="mini-history"></div>
+  `;
+  renderCard();
+  renderMiniHistory();
+}
+
+function renderReview() {
+  const tc = TC[state.currentTeam];
+  const correct = state.turnHistory.filter(h=>h.result==='correct').length;
+  const tabu    = state.turnHistory.filter(h=>h.result==='tabu').length;
+  const skip    = state.turnHistory.filter(h=>h.result==='skip').length;
+  document.querySelectorAll('.blob').forEach(b=>b.remove());
+
+  const s = document.getElementById('screen');
+  s.style.animation='none'; s.offsetHeight; s.style.animation='fadeUp .35s both';
+  s.innerHTML = `
+    <div class="logo" style="font-size:38px;color:#3D2C40">Fin del turno</div>
+    <div class="team-badge" style="background:${tc.grad}">${TEAM_NAMES[state.currentTeam]}</div>
+    <div class="review-stats">
+      <div class="stat-box" style="background:#D4F5E4;border-color:#A8DFC9">
+        <div class="stat-num" style="color:#3BAE7E">${correct}</div>
+        <div class="stat-label" style="color:#3BAE7E">CORRECTAS</div>
+      </div>
+      <div class="stat-box" style="background:#FFE0E8;border-color:#FFB3C1">
+        <div class="stat-num" style="color:#E8325A">${tabu}</div>
+        <div class="stat-label" style="color:#E8325A">TABÚ (−1)</div>
+      </div>
+      <div class="stat-box" style="background:#FFF7D4;border-color:#FFE599">
+        <div class="stat-num" style="color:#C9960A">${skip}</div>
+        <div class="stat-label" style="color:#C9960A">PASADAS</div>
+      </div>
+    </div>
+    <div class="history-list">
+      ${state.turnHistory.map(h=>{
+        const bc=h.result==='correct'?'#3BAE7E':h.result==='tabu'?'#E8325A':'#C9960A';
+        const bg=h.result==='correct'?'#EEFAF4':h.result==='tabu'?'#FFF0F3':'#FFFBEA';
+        const icon=h.result==='correct'?'✓':h.result==='tabu'?'🚫':'⏭';
+        return `<div class="history-row" style="background:${bg};border-left-color:${bc}">${icon} ${h.word}</div>`;
+      }).join('')}
+    </div>
+    <button class="btn btn-primary" style="background:${tc.grad};box-shadow:0 6px 18px ${tc.light}99" onclick="nextTurn()">Continuar →</button>
+  `;
+}
+
+function renderGameover() {
+  const winner = state.scores[0]>state.scores[1]?0:state.scores[1]>state.scores[0]?1:-1;
+  document.querySelectorAll('.blob').forEach(b=>b.remove());
+  const s = document.getElementById('screen');
+  s.style.animation='none'; s.offsetHeight; s.style.animation='popIn .5s both';
+  s.innerHTML = `
+    <div class="logo">¡Fin!</div>
+    ${winner===-1
+      ? `<div style="font-size:22px;font-weight:800;color:#C9960A">🤝 ¡Empate!</div>`
+      : `<div style="font-size:20px;font-weight:800;color:${TC[winner].dark}">🏆 ¡Ganó ${TEAM_NAMES[winner]}!</div>`
+    }
+    <div class="scoreboard">
+      ${TEAM_NAMES.map((name,i)=>{
+        const w=i===winner;
+        return `<div class="score-card" style="background:${w?TC[i].grad:'#fff'};border-color:${w?TC[i].dark:TC[i].light};transform:${w?'scale(1.07)':'scale(1)'};box-shadow:${w?`0 10px 26px ${TC[i].light}99`:'0 2px 10px rgba(0,0,0,.06)'}">
+          <div class="score-name" style="color:${w?'#fff':TC[i].dark}">${name}</div>
+          <div class="score-num" style="color:${w?'#fff':'#3D2C40'}">${state.scores[i]}</div>
+          ${w?'<div style="font-size:20px;margin-top:4px">🏆</div>':''}
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="btn btn-primary" style="background:linear-gradient(135deg,#C8B8F0,#A78BFA);box-shadow:0 6px 18px #C8B8F066" onclick="resetGame()">✨ Jugar de nuevo</button>
+  `;
+}
+
+function renderCurrent() {
+  if      (state.screen==='home')     renderHome();
+  else if (state.screen==='playing')  renderPlaying();
+  else if (state.screen==='review')   renderReview();
+  else if (state.screen==='gameover') renderGameover();
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+renderCurrent();
+</script>
+</body>
+</html>
