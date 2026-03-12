@@ -685,215 +685,290 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-// ── Karplus-Strong string synthesis (simulates plucked strings) ──
 // ══════════════════════════════════════════════
-//  CUMBIA VILLERA ENGINE
-//  Instruments: synth bass, cencerro, redoblante,
-//               hi-hat, melodía de teclado tropical
+//  PERSIANA AMERICANA ENGINE — Soda Stereo
+//  Intro: D→Bm  |  Verso: D→G→C→Bm
+//  Pre-coro: Em→C  |  Coro: C→G→Em→D
+//  101 BPM, E minor
 // ══════════════════════════════════════════════
 
-// Synth bass: square + sub for that "bajo cumbia" punch
-function playBajoCumbia(freq, start, dur, vol) {
+// Electric guitar — sawtooth + distortion + delay simulation
+function playGuitar(freq, start, dur, vol) {
   var ac = audioCtx;
-  // Sub oscillator
-  var sub = ac.createOscillator(), gSub = ac.createGain();
-  sub.type = 'sine'; sub.frequency.value = freq / 2;
-  sub.connect(gSub); gSub.connect(masterGain);
-  gSub.gain.setValueAtTime(vol * 0.6, start);
-  gSub.gain.exponentialRampToValueAtTime(0.001, start + Math.min(dur, 0.28));
-  sub.start(start); sub.stop(start + Math.min(dur, 0.3));
+  var osc = ac.createOscillator();
+  var dist = ac.createWaveShaper();
+  var g = ac.createGain();
+  var lp = ac.createBiquadFilter();
+  var curve = new Float32Array(256);
+  for (var i = 0; i < 256; i++) {
+    var x = (i * 2) / 256 - 1;
+    curve[i] = (Math.PI + 180) * x / (Math.PI + 180 * Math.abs(x));
+  }
+  dist.curve = curve;
+  osc.type = 'sawtooth';
+  osc.frequency.value = freq;
+  lp.type = 'lowpass'; lp.frequency.value = 2400; lp.Q.value = 1.2;
+  osc.connect(dist); dist.connect(lp); lp.connect(g); g.connect(masterGain);
+  g.gain.setValueAtTime(0, start);
+  g.gain.linearRampToValueAtTime(vol, start + 0.01);
+  g.gain.setValueAtTime(vol * 0.65, start + dur * 0.45);
+  g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+  osc.start(start); osc.stop(start + dur + 0.02);
+}
 
-  // Main square wave — compressed, gritty
+// Riff note — cleaner, brighter for the iconic intro arpeggio
+function playRiff(freq, start, dur, vol) {
+  var ac = audioCtx;
   var osc = ac.createOscillator(), g = ac.createGain();
   var lp = ac.createBiquadFilter();
-  osc.type = 'square'; osc.frequency.value = freq;
-  lp.type = 'lowpass'; lp.frequency.value = 800; lp.Q.value = 2;
+  osc.type = 'sawtooth'; osc.frequency.value = freq;
+  lp.type = 'lowpass'; lp.frequency.value = 3200; lp.Q.value = 0.8;
   osc.connect(lp); lp.connect(g); g.connect(masterGain);
-  g.gain.setValueAtTime(vol * 0.45, start);
-  g.gain.linearRampToValueAtTime(vol * 0.5, start + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.001, start + Math.min(dur, 0.22));
-  osc.start(start); osc.stop(start + Math.min(dur, 0.25));
+  g.gain.setValueAtTime(0, start);
+  g.gain.linearRampToValueAtTime(vol, start + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+  osc.start(start); osc.stop(start + dur + 0.01);
 }
 
-// Cencerro (cowbell) — the heart of cumbia
-function playCencerro(start, vol) {
+// Bass
+function playBassML(freq, start, dur, vol) {
   var ac = audioCtx;
-  var t = start;
-  // Two slightly detuned square oscillators for metallic ring
-  [[562, 1.0], [845, 0.6]].forEach(function(p) {
-    var o = ac.createOscillator(), g = ac.createGain(), bp = ac.createBiquadFilter();
-    o.type = 'square'; o.frequency.value = p[0];
-    bp.type = 'bandpass'; bp.frequency.value = p[0] * 1.1; bp.Q.value = 8;
-    o.connect(bp); bp.connect(g); g.connect(masterGain);
-    g.gain.setValueAtTime(vol * p[1], t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
-    o.start(t); o.stop(t + 0.3);
-  });
+  var osc = ac.createOscillator(), g = ac.createGain();
+  var lp = ac.createBiquadFilter();
+  osc.type = 'sawtooth'; osc.frequency.value = freq;
+  lp.type = 'lowpass'; lp.frequency.value = 550; lp.Q.value = 2;
+  osc.connect(lp); lp.connect(g); g.connect(masterGain);
+  g.gain.setValueAtTime(vol, start);
+  g.gain.exponentialRampToValueAtTime(0.001, start + Math.min(dur, 0.38));
+  osc.start(start); osc.stop(start + Math.min(dur, 0.42));
+  var sub = ac.createOscillator(), gs = ac.createGain();
+  sub.type = 'sine'; sub.frequency.value = freq / 2;
+  sub.connect(gs); gs.connect(masterGain);
+  gs.gain.setValueAtTime(vol * 0.45, start);
+  gs.gain.exponentialRampToValueAtTime(0.001, start + Math.min(dur, 0.28));
+  sub.start(start); sub.stop(start + Math.min(dur, 0.32));
 }
 
-// Redoblante (snare) — sharp and dry
-function playRedoblante(start, vol) {
-  var ac = audioCtx;
-  var sr = ac.sampleRate;
-  // Noise component
-  var buf = ac.createBuffer(1, Math.floor(sr * 0.12), sr);
-  var d = buf.getChannelData(0);
-  for (var i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-i/(sr*0.025));
-  var ns = ac.createBufferSource(), ng = ac.createGain(), nbp = ac.createBiquadFilter();
-  ns.buffer = buf; nbp.type = 'bandpass'; nbp.frequency.value = 1800; nbp.Q.value = 1;
-  ns.connect(nbp); nbp.connect(ng); ng.connect(masterGain);
-  ng.gain.value = vol * 0.7;
-  ns.start(start);
-  // Tone component (body)
-  var o = ac.createOscillator(), og = ac.createGain();
-  o.type = 'triangle'; o.frequency.setValueAtTime(220, start);
-  o.frequency.exponentialRampToValueAtTime(80, start + 0.06);
-  o.connect(og); og.connect(masterGain);
-  og.gain.setValueAtTime(vol * 0.5, start);
-  og.gain.exponentialRampToValueAtTime(0.001, start + 0.07);
-  o.start(start); o.stop(start + 0.08);
-}
-
-// Hi-hat cerrado (closed)
-function playHihat(start, vol) {
-  var ac = audioCtx;
-  var sr = ac.sampleRate;
-  var buf = ac.createBuffer(1, Math.floor(sr * 0.06), sr);
-  var d = buf.getChannelData(0);
-  for (var i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-i/(sr*0.006));
-  var src = ac.createBufferSource(), g = ac.createGain(), hp = ac.createBiquadFilter();
-  src.buffer = buf; hp.type = 'highpass'; hp.frequency.value = 7000;
-  src.connect(hp); hp.connect(g); g.connect(masterGain);
-  g.gain.value = vol;
-  src.start(start);
-}
-
-// Bombo (kick) — deep thump
-function playBombo(start, vol) {
+// Kick
+function playKickML(start, vol) {
   var ac = audioCtx;
   var o = ac.createOscillator(), g = ac.createGain();
   o.type = 'sine';
-  o.frequency.setValueAtTime(120, start);
-  o.frequency.exponentialRampToValueAtTime(40, start + 0.08);
+  o.frequency.setValueAtTime(140, start);
+  o.frequency.exponentialRampToValueAtTime(42, start + 0.08);
   o.connect(g); g.connect(masterGain);
   g.gain.setValueAtTime(vol, start);
   g.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
   o.start(start); o.stop(start + 0.2);
-  // Click transient
-  var buf = ac.createBuffer(1, Math.floor(ac.sampleRate*0.015), ac.sampleRate);
+  var buf = ac.createBuffer(1, Math.floor(ac.sampleRate*0.01), ac.sampleRate);
   var d = buf.getChannelData(0);
   for (var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(ac.sampleRate*0.002));
   var ns=ac.createBufferSource(), ng=ac.createGain();
   ns.buffer=buf; ns.connect(ng); ng.connect(masterGain);
-  ng.gain.value = vol*0.5; ns.start(start);
+  ng.gain.value=vol*0.55; ns.start(start);
 }
 
-// Melodía: teclado tropical (sinewave + 2nd harmonic = flute-ish)
-function playTecla(freq, start, dur, vol) {
+// Snare — más seco y potente (estilo Signos)
+function playSnareML(start, vol) {
   var ac = audioCtx;
-  [1, 2, 3].forEach(function(harm, i) {
-    var vols = [0.5, 0.2, 0.06];
-    var o = ac.createOscillator(), g = ac.createGain();
-    o.type = 'sine'; o.frequency.value = freq * harm;
-    o.connect(g); g.connect(masterGain);
-    g.gain.setValueAtTime(0, start);
-    g.gain.linearRampToValueAtTime(vol * vols[i], start + 0.02);
-    g.gain.setValueAtTime(vol * vols[i], start + dur * 0.55);
-    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
-    o.start(start); o.stop(start + dur + 0.02);
-  });
+  var sr = ac.sampleRate;
+  var buf = ac.createBuffer(1, Math.floor(sr*0.13), sr);
+  var d = buf.getChannelData(0);
+  for (var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(sr*0.028));
+  var ns=ac.createBufferSource(), ng=ac.createGain(), nbp=ac.createBiquadFilter();
+  ns.buffer=buf; nbp.type='bandpass'; nbp.frequency.value=2200; nbp.Q.value=0.9;
+  ns.connect(nbp); nbp.connect(ng); ng.connect(masterGain);
+  ng.gain.value=vol*0.85; ns.start(start);
+  var o=ac.createOscillator(), og=ac.createGain();
+  o.type='triangle'; o.frequency.setValueAtTime(210,start);
+  o.frequency.exponentialRampToValueAtTime(85,start+0.055);
+  o.connect(og); og.connect(masterGain);
+  og.gain.setValueAtTime(vol*0.45,start);
+  og.gain.exponentialRampToValueAtTime(0.001,start+0.065);
+  o.start(start); o.stop(start+0.075);
+}
+
+// Hi-hat
+function playHihatML(start, vol) {
+  var ac = audioCtx;
+  var sr = ac.sampleRate;
+  var buf = ac.createBuffer(1, Math.floor(sr*0.035), sr);
+  var d = buf.getChannelData(0);
+  for (var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(sr*0.005));
+  var src=ac.createBufferSource(), g=ac.createGain(), hp=ac.createBiquadFilter();
+  src.buffer=buf; hp.type='highpass'; hp.frequency.value=7500;
+  src.connect(hp); hp.connect(g); g.connect(masterGain);
+  g.gain.value=vol; src.start(start);
+}
+
+// Open hi-hat
+function playOpenHat(start, vol) {
+  var ac = audioCtx;
+  var sr = ac.sampleRate;
+  var buf = ac.createBuffer(1, Math.floor(sr*0.18), sr);
+  var d = buf.getChannelData(0);
+  for (var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(sr*0.06));
+  var src=ac.createBufferSource(), g=ac.createGain(), hp=ac.createBiquadFilter();
+  src.buffer=buf; hp.type='highpass'; hp.frequency.value=6500;
+  src.connect(hp); hp.connect(g); g.connect(masterGain);
+  g.gain.value=vol; src.start(start);
 }
 
 var reverbNode = null;
 
 function scheduleCumbiaLoop(startTime) {
-  // Cumbia villera: C minor, 110 BPM — fiestero y movido
-  var BPM = 110;
-  var B = 60 / BPM;      // ~0.545s per beat
-  var bar = B * 4;
-  var loop = bar * 4;    // 4 bars ~8.7s
+  // Persiana Americana — 101 BPM, E minor
+  var BPM = 101;
+  var B   = 60 / BPM;   // ~0.594s per beat
+  var bar = B * 4;       // ~2.376s
+  var loop = bar * 8;    // 8 compases ~19s
+
+  // Frecuencias base (Hz)
+  // D2=73.42 E2=82.41 G2=98 A2=110 B2=123.47 C3=130.81
+  // D3=146.83 E3=164.81 F#3=185 G3=196 A3=220 B3=246.94
+  // C4=261.63 D4=293.66 E4=329.63 F#4=370 G4=392 A4=440 B4=493.88
+  // C5=523.25 D5=587.33 E5=659.25
 
   var N = {
-    C2:65.41, G2:98, C3:130.81, Eb3:155.56, F3:174.61, G3:196,
-    Ab3:207.65, Bb3:233.08, C4:261.63, D4:293.66, Eb4:311.13,
-    F4:349.23, G4:392, Ab4:415.3, Bb4:466.16, C5:523.25
+    D2:73.42, E2:82.41, G2:98, A2:110, B2:123.47, C3:130.81,
+    D3:146.83, E3:164.81, Fs3:185, G3:196, A3:220, B3:246.94,
+    C4:261.63, D4:293.66, E4:329.63, Fs4:370, G4:392, A4:440, B4:493.88,
+    C5:523.25, D5:587.33, E5:659.25
   };
 
-  // ── Melodía: tropical, repetitiva y pegadiza ──
-  // 2 bar riff que se repite
-  var riff = [
-    [N.G4,  0,       B*0.4],
-    [N.Eb4, B*0.5,   B*0.4],
-    [N.F4,  B*1,     B*0.4],
-    [N.G4,  B*1.5,   B*0.4],
-    [N.Ab4, B*2,     B*0.75],
-    [N.G4,  B*3,     B*0.4],
-    [N.F4,  B*3.5,   B*0.4],
-    // bar 2
-    [N.Eb4, bar,     B*0.4],
-    [N.D4,  bar+B*0.5, B*0.4],
-    [N.Eb4, bar+B*1, B*0.4],
-    [N.F4,  bar+B*1.5, B*0.4],
-    [N.G4,  bar+B*2, B*0.75],
-    [N.F4,  bar+B*3, B*0.4],
-    [N.Eb4, bar+B*3.5, B*0.4],
+  // ── INTRO RIFF (bars 0-1): iconic D→Bm arpeggio ──
+  // Simulamos el riff descendente de la intro
+  var introRiff = [
+    [N.D5,  0,           0.18],
+    [N.B4,  B*0.25,      0.16],
+    [N.Fs4, B*0.5,       0.16],
+    [N.D4,  B*0.75,      0.16],
+    [N.Fs4, B*1.0,       0.16],
+    [N.B4,  B*1.25,      0.16],
+    [N.D5,  B*1.5,       0.18],
+    [N.B4,  B*1.75,      0.16],
+    [N.Fs4, B*2.0,       0.16],
+    [N.D4,  B*2.25,      0.16],
+    [N.Fs4, B*2.5,       0.16],
+    [N.A3,  B*2.75,      0.16],
+    // resolve to Bm
+    [N.B3,  B*3.0,       0.22],
+    [N.Fs3, B*3.25,      0.18],
+    [N.D3,  B*3.5,       0.18],
+    [N.B2,  B*3.75,      0.18],
+  ];
+  // Repeat intro riff in bar 1
+  introRiff.forEach(function(n) {
+    playRiff(n[0], startTime + n[1], n[2], 0.38);
+    playRiff(n[0], startTime + bar + n[1], n[2], 0.35);
+  });
+
+  // ── PROGRESIÓN DE ACORDES (bars 2-7) ──
+  // Verso: D  G  C  Bm  (bars 2-3)
+  // Pre:   Em C  Em C   (bars 4-5)
+  // Coro:  C  G  Em D   (bars 6-7)
+  var chordProg = [
+    // [root, fifth, third, octave]
+    { r:N.D3,  f:N.A3,  t:N.Fs3, o:N.D4  }, // D
+    { r:N.G2,  f:N.D3,  t:N.B3,  o:N.G3  }, // G
+    { r:N.C3,  f:N.G3,  t:N.E4,  o:N.C4  }, // C
+    { r:N.B2,  f:N.Fs3, t:N.D3,  o:N.B3  }, // Bm
+    { r:N.E2,  f:N.B2,  t:N.G3,  o:N.E3  }, // Em
+    { r:N.C3,  f:N.G3,  t:N.E4,  o:N.C4  }, // C
+    { r:N.E2,  f:N.B2,  t:N.G3,  o:N.E3  }, // Em
+    { r:N.C3,  f:N.G3,  t:N.E4,  o:N.C4  }, // C (pre-coro bar 2 repeat)
+    { r:N.C3,  f:N.G3,  t:N.E4,  o:N.C4  }, // C (coro)
+    { r:N.G2,  f:N.D3,  t:N.B3,  o:N.G3  }, // G
+    { r:N.E2,  f:N.B2,  t:N.G3,  o:N.E3  }, // Em
+    { r:N.D3,  f:N.A3,  t:N.Fs3, o:N.D4  }, // D
   ];
 
-  // Repetir el riff en barras 3 y 4 (con variación de resolución)
-  var mel = riff.slice();
-  riff.forEach(function(n) { mel.push([n[0], n[1] + bar*2, n[2]]); });
-  // Resolver en bar 4 hacia la tónica
-  mel.push([N.C4, bar*3 + B*2, B*0.5]);
-  mel.push([N.Eb4,bar*3 + B*2.5, B*0.5]);
-  mel.push([N.G4, bar*3 + B*3, B]);
-
-  // ── Bajo: patrón típico cumbia, cuartas/quintas ──
-  // bar 1: C → G → C → G
-  var bass = [];
-  var bassPattern = [
-    [N.C2, 0, B*0.45], [N.G2, B*0.5, B*0.45],
-    [N.C3, B, B*0.45], [N.G2, B*1.5, B*0.45],
-    [N.C2, B*2,B*0.45],[N.G2, B*2.5, B*0.45],
-    [N.C3, B*3,B*0.45],[N.G2, B*3.5, B*0.45],
+  // Tocar acordes en bars 2-7 (6 compases = 12 tiempos de 2 bars)
+  var barChords = [
+    chordProg[0], chordProg[1],  // bar 2-3: D G (verso)
+    chordProg[2], chordProg[3],  // bar 3-4: C Bm
+    chordProg[4], chordProg[5],  // bar 4-5: Em C (pre)
+    chordProg[6], chordProg[7],  // bar 5-6: Em C
+    chordProg[8], chordProg[9],  // bar 6-7: C G (coro)
+    chordProg[10],chordProg[11], // bar 7-8: Em D
   ];
-  // bar 2: Eb → Bb
-  var bassBar2 = [
-    [N.Eb3,bar, B*0.45],[N.Bb3,bar+B*0.5,B*0.45],
-    [N.Eb3,bar+B,B*0.45],[N.Bb3,bar+B*1.5,B*0.45],
-    [N.F3, bar+B*2,B*0.45],[N.C3,bar+B*2.5,B*0.45],
-    [N.F3, bar+B*3,B*0.45],[N.C3,bar+B*3.5,B*0.45],
-  ];
-  bassPattern.forEach(function(n){ bass.push(n); bass.push([n[0], n[1]+bar*2, n[2]]); });
-  bassBar2.forEach(function(n){    bass.push(n); bass.push([n[0], n[1]+bar*2, n[2]]); });
 
-  // ── Percusión: el alma de la cumbia ──
-  for (var b = 0; b < 4; b++) {
-    var t = startTime + bar * b;
-    // Bombo en 1 y 3
-    playBombo(t,         0.75);
-    playBombo(t + B*2,   0.7);
-    // Redoblante en 2 y 4 (a veces con anticipación)
-    playRedoblante(t + B,      0.6);
-    playRedoblante(t + B*3,    0.65);
-    playRedoblante(t + B*3.75, 0.35); // anticipación
-    // Cencerro: el patrón 3+3+2 de cumbia
-    playCencerro(t,           0.55);
-    playCencerro(t + B*0.75,  0.35);
-    playCencerro(t + B*1.5,   0.55);
-    playCencerro(t + B*2.25,  0.35);
-    playCencerro(t + B*3,     0.55);
-    playCencerro(t + B*3.5,   0.35);
-    // Hi-hat en corcheas
+  for (var bi = 0; bi < 6; bi++) {
+    var ch  = barChords[bi * 2];
+    var ch2 = barChords[bi * 2 + 1];
+    var t0  = startTime + (bi + 2) * bar;
+
+    // First chord in bar (beats 1-2)
+    playGuitar(ch.r,  t0,          B*1.9, 0.32);
+    playGuitar(ch.f,  t0 + 0.01,   B*1.9, 0.26);
+    playGuitar(ch.o,  t0 + 0.02,   B*1.9, 0.22);
+    playGuitar(ch.t,  t0 + 0.03,   B*1.7, 0.18);
+    // up strum
+    playGuitar(ch.t,  t0 + B*0.5,  B*0.4, 0.14);
+    playGuitar(ch.o,  t0 + B*1.0,  B*0.8, 0.24);
+    playGuitar(ch.f,  t0 + B*1.5,  B*0.4, 0.13);
+
+    // Second chord in bar (beats 3-4)
+    playGuitar(ch2.r, t0 + B*2,        B*1.9, 0.3);
+    playGuitar(ch2.f, t0 + B*2 + 0.01, B*1.9, 0.25);
+    playGuitar(ch2.o, t0 + B*2 + 0.02, B*1.9, 0.2);
+    playGuitar(ch2.t, t0 + B*2 + 0.03, B*1.7, 0.17);
+    playGuitar(ch2.t, t0 + B*2.5,      B*0.4, 0.13);
+    playGuitar(ch2.o, t0 + B*3.0,      B*0.8, 0.22);
+    playGuitar(ch2.f, t0 + B*3.5,      B*0.4, 0.12);
+  }
+
+  // ── BAJO (bars 2-7) ──
+  var bassRoots = [
+    N.D2, N.G2, N.C3, N.B2,
+    N.E2, N.C3, N.E2, N.C3,
+    N.C3, N.G2, N.E2, N.D2
+  ];
+  var bassChords = barChords;
+
+  for (var bj = 0; bj < 6; bj++) {
+    var tb  = startTime + (bj + 2) * bar;
+    var ch3 = barChords[bj * 2];
+    var ch4 = barChords[bj * 2 + 1];
+    // chord 1 bass line
+    playBassML(ch3.r,      tb,           B*0.88, 0.7);
+    playBassML(ch3.r,      tb + B*0.5,   B*0.4,  0.45);
+    playBassML(ch3.f,      tb + B,        B*0.88, 0.62);
+    playBassML(ch3.f,      tb + B*1.5,   B*0.4,  0.38);
+    // chord 2 bass line
+    playBassML(ch4.r,      tb + B*2,      B*0.88, 0.68);
+    playBassML(ch4.r,      tb + B*2.5,   B*0.4,  0.42);
+    playBassML(ch4.f,      tb + B*3,      B*0.88, 0.6);
+    // walking to next
+    var nextRoot = bj < 5 ? barChords[(bj+1)*2].r : barChords[0].r;
+    playBassML(nextRoot * 0.9449, tb + B*3.5, B*0.4, 0.35);
+  }
+
+  // ── BATERÍA — rock 101 BPM estilo Signos ──
+  for (var bk = 0; bk < 8; bk++) {
+    var td = startTime + bk * bar;
+    // Kick: beat 1, 2.5 (ghost), 3
+    playKickML(td,           0.82);
+    playKickML(td + B*2,     0.78);
+    playKickML(td + B*2.5,   0.3);  // ghost
+    // Snare: beat 2 y 4 (+ rimshot feel en bar 4+)
+    playSnareML(td + B,      0.72);
+    playSnareML(td + B*3,    0.78);
+    if (bk >= 4) {
+      playSnareML(td + B*3.75, 0.32); // flam anticipado en segunda mitad
+    }
+    // Hi-hat en corcheas, open en 4.5 cada 2 bars
     for (var i = 0; i < 8; i++) {
-      playHihat(t + B * i * 0.5, i % 2 === 0 ? 0.18 : 0.1);
+      playHihatML(td + B * i * 0.5, i % 2 === 0 ? 0.2 : 0.12);
+    }
+    if (bk % 2 === 1) {
+      playOpenHat(td + B*3.5, 0.22);
     }
   }
 
-  mel.forEach(function(m)  { playTecla(m[0], startTime + m[1], m[2], 0.4); });
-  bass.forEach(function(m) { playBajoCumbia(m[0], startTime + m[1], m[2], 0.65); });
-
   return loop;
 }
+
 
 function startMusic() {
   if (musicPlayingRef) return;
@@ -2718,7 +2793,7 @@ function renderCurrent() {
 applyTheme(settings.theme);
 
 </script>
-<div class="version-tag">v1.4 - by Nicof</div>
+<div class="version-tag">v1.6 - by Nicof</div>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {

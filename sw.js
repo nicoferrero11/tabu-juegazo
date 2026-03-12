@@ -1,4 +1,4 @@
-const CACHE = 'tabu-argentum-v1.4';
+const CACHE = 'tabu-argentum-v1.6';
 const ASSETS = [
   './',
   './index.html',
